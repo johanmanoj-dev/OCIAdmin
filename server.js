@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
@@ -6,22 +7,22 @@ const rateLimit = require('express-rate-limit');
 const { execSync } = require('child_process');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // === 1. NATURAL MEMORY BUFFER (~180MB) ===
 // Keeps server memory safely at ~23-26% to satisfy Oracle Always-Free rules
 const memoryHold = Buffer.alloc(180 * 1024 * 1024, 0xAA);
 
 // === 2. ADMIN CREDENTIALS ===
-const ADMIN_USER = "admin";
-// Pre-hashed password for "BuyZen2026!":
-const ADMIN_HASH = "$2a$10$w85G05QkKz/k7T4g0Y9lTeOqH0Y4tYfG0z5f5r5w85G05QkKz/k7T";
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_HASH = process.env.ADMIN_HASH;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
-    secret: 'buyzen-super-secret-key-' + Math.random(),
+    secret: process.env.SESSION_SECRET || ('buyzen-super-secret-key-' + Math.random()),
     resave: false,
     saveUninitialized: false,
     cookie: { 
@@ -85,7 +86,11 @@ app.get('/login', (req, res) => {
 // Handle Login
 app.post('/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
-    if (username === ADMIN_USER && (password === "BuyZen2026!" || bcrypt.compareSync(password, ADMIN_HASH))) {
+    const isUserMatch = username === ADMIN_USER;
+    const isPasswordMatch = (ADMIN_PASSWORD && password === ADMIN_PASSWORD) ||
+                            (ADMIN_HASH && bcrypt.compareSync(password, ADMIN_HASH));
+
+    if (isUserMatch && isPasswordMatch) {
         req.session.authenticated = true;
         req.session.user = username;
         return res.redirect('/');
