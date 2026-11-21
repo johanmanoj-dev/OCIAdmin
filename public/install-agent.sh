@@ -65,10 +65,13 @@ fi
 REPORT_URL="${HUB_URL%/}/api/nodes/report"
 IS_ACTIVE=false
 SLEEP_INTERVAL=10
+LAST_NET_RX=0
+LAST_NET_TX=0
+LAST_NET_TIME=0
 
 while true; do
   if [ "$IS_ACTIVE" = "true" ]; then
-    # Active mode: collect CPU, RAM, Disk and Uptime
+    # Active mode: collect CPU, RAM, Disk, Uptime and Network
     MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
     MEM_AVAIL_KB=$(grep MemAvailable /proc/meminfo 2>/dev/null | awk '{print $2}')
 
@@ -109,6 +112,24 @@ while true; do
     UPTIME_SECS=$(cut -d. -f1 /proc/uptime 2>/dev/null || echo 0)
     UPTIME_HOURS=$(awk "BEGIN {printf \"%.1f\", $UPTIME_SECS / 3600}")
 
+    # Network Throughput (/proc/net/dev)
+    CURR_NET_TIME=$(date +%s)
+    NET_TOTALS=$(grep -v 'lo:' /proc/net/dev 2>/dev/null | grep ':' | awk -F: '{print $2}' | awk '{rx+=$1; tx+=$9} END {print rx+0, tx+0}')
+    CURR_NET_RX=$(echo "$NET_TOTALS" | awk '{print $1}')
+    CURR_NET_TX=$(echo "$NET_TOTALS" | awk '{print $2}')
+
+    if [ "$LAST_NET_TIME" -gt 0 ] && [ "$CURR_NET_TIME" -gt "$LAST_NET_TIME" ] && [ "$CURR_NET_RX" -ge "$LAST_NET_RX" ]; then
+      NET_TIME_DELTA=$((CURR_NET_TIME - LAST_NET_TIME))
+      RX_SEC=$(( (CURR_NET_RX - LAST_NET_RX) / NET_TIME_DELTA ))
+      TX_SEC=$(( (CURR_NET_TX - LAST_NET_TX) / NET_TIME_DELTA ))
+    else
+      RX_SEC=0
+      TX_SEC=0
+    fi
+    LAST_NET_RX=$CURR_NET_RX
+    LAST_NET_TX=$CURR_NET_TX
+    LAST_NET_TIME=$CURR_NET_TIME
+
     JSON_DATA=$(cat << JSON
 {
   "nodeId": "$NODE_ID",
@@ -123,7 +144,11 @@ while true; do
   "diskFreeGB": "$DISK_FREE_GB",
   "diskUsedPercent": "$DISK_USED_PERCENT",
   "diskFreePercent": "$DISK_FREE_PERCENT",
-  "uptimeHours": "$UPTIME_HOURS"
+  "uptimeHours": "$UPTIME_HOURS",
+  "rxSec": $RX_SEC,
+  "txSec": $TX_SEC,
+  "rxTotal": $CURR_NET_RX,
+  "txTotal": $CURR_NET_TX
 }
 JSON
 )

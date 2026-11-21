@@ -7,6 +7,22 @@ const VIEWER_TIMEOUT_MS = 12000; // 12 seconds inactivity means no viewer on das
 
 let lastDashboardActivity = 0;
 
+function formatSpeed(bytesPerSec) {
+    const n = parseFloat(bytesPerSec) || 0;
+    if (n <= 0) return '0 B/s';
+    if (n < 1024) return n.toFixed(0) + ' B/s';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB/s';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB/s';
+}
+
+function formatBytes(bytes) {
+    const n = parseFloat(bytes) || 0;
+    if (n <= 0) return '0 B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    return (n / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
 function touchDashboardActivity() {
     lastDashboardActivity = Date.now();
 }
@@ -54,11 +70,17 @@ function recordRemoteTelemetry(payload, clientIp = '') {
             diskFreeGB = '0.0',
             diskUsedPercent = '0.0',
             diskFreePercent = '0.0',
-            uptimeHours = '0.0'
+            uptimeHours = '0.0',
+            rxSec = 0,
+            txSec = 0,
+            rxTotal = 0,
+            txTotal = 0
         } = payload;
 
         const memNum = parseFloat(memPercent) || 0;
         const cpuNum = parseFloat(cpuPercent) || 0;
+        const rxNum = parseInt(rxSec, 10) || 0;
+        const txNum = parseInt(txSec, 10) || 0;
 
         existing.stats = {
             memPercent: memNum.toFixed(1),
@@ -71,7 +93,13 @@ function recordRemoteTelemetry(payload, clientIp = '') {
             diskUsedPercent: String(diskUsedPercent),
             diskFreePercent: String(diskFreePercent),
             uptimeHours: String(uptimeHours),
-            pgStatus: payload.pgStatus || 'N/A'
+            pgStatus: payload.pgStatus || 'N/A',
+            rxSec: rxNum,
+            txSec: txNum,
+            rxRateStr: payload.rxRateStr || formatSpeed(rxNum),
+            txRateStr: payload.txRateStr || formatSpeed(txNum),
+            rxTotalStr: payload.rxTotalStr || formatBytes(rxTotal),
+            txTotalStr: payload.txTotalStr || formatBytes(txTotal)
         };
 
         // Maintain in-memory time-series history

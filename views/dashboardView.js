@@ -322,14 +322,8 @@ function renderDashboardPage() {
         /* Grid Row for System Items */
         .system-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 14px;
-        }
-
-        @media (max-width: 580px) {
-            .system-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .grid-card {
@@ -705,6 +699,31 @@ function renderDashboardPage() {
                     <span>Remaining: <strong id="diskFreeMeta" style="color: #4ade80;">-- GB</strong></span>
                 </div>
             </section>
+
+            <!-- Network Throughput Card -->
+            <section class="grid-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="grid-card-title">Network Throughput (I/O)</span>
+                    <span id="netTotalMeta" style="font-size: 11px; font-weight: 600; color: #a1a1aa; font-variant-numeric: tabular-nums;">--</span>
+                </div>
+                <div class="grid-card-value" style="display: flex; align-items: baseline; justify-content: space-between;">
+                    <div>
+                        <span style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-right: 3px;">↓ RX</span>
+                        <strong id="rxRateVal" style="font-size: 17px; color: #ffffff;">0 B/s</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: #c084fc; font-weight: 600; margin-right: 3px;">↑ TX</span>
+                        <strong id="txRateVal" style="font-size: 17px; color: #ffffff;">0 B/s</strong>
+                    </div>
+                </div>
+                <div class="progress-bar-thin">
+                    <div class="progress-fill-thin" id="netBar" style="background: linear-gradient(90deg, #38bdf8, #c084fc); width: 0%;"></div>
+                </div>
+                <div class="grid-card-meta">
+                    <span>Recv: <strong id="rxTotalMeta" style="color: #38bdf8;">--</strong></span>
+                    <span>Sent: <strong id="txTotalMeta" style="color: #c084fc;">--</strong></span>
+                </div>
+            </section>
         </div>
 
         <footer class="footer-note" id="footerNodeInfo">
@@ -938,6 +957,24 @@ function renderDashboardPage() {
                 document.getElementById('diskBar').style.width = Math.min(100, Math.max(0, usedPercent)).toFixed(1) + '%';
                 document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
+
+                // 5. Network Throughput Card
+                const rxRate = stats.rxRateStr || '0 B/s';
+                const txRate = stats.txRateStr || '0 B/s';
+                const rxTotal = stats.rxTotalStr || '--';
+                const txTotal = stats.txTotalStr || '--';
+                const rxSec = parseInt(stats.rxSec, 10) || 0;
+                const txSec = parseInt(stats.txSec, 10) || 0;
+
+                document.getElementById('rxRateVal').innerText = rxRate;
+                document.getElementById('txRateVal').innerText = txRate;
+                document.getElementById('rxTotalMeta').innerText = rxTotal;
+                document.getElementById('txTotalMeta').innerText = txTotal;
+                document.getElementById('netTotalMeta').innerText = 'In: ' + rxTotal + ' • Out: ' + txTotal;
+
+                const totalNetSec = rxSec + txSec;
+                const netPct = totalNetSec > 0 ? Math.min(100, Math.max(3, Math.round((totalNetSec / (5 * 1024 * 1024)) * 100))) : 0;
+                document.getElementById('netBar').style.width = netPct + '%';
 
             } catch (e) {
                 console.error("Telemetry fetch error:", e);

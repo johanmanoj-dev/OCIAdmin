@@ -1,15 +1,102 @@
+const fs = require('fs');
 const si = require('systeminformation');
 const { execSync } = require('child_process');
+
+let prevNetSample = {
+    time: 0,
+    rxBytes: 0,
+    txBytes: 0
+};
+
+function formatSpeed(bytesPerSec) {
+    const n = parseFloat(bytesPerSec) || 0;
+    if (n <= 0) return '0 B/s';
+    if (n < 1024) return n.toFixed(0) + ' B/s';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB/s';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB/s';
+}
+
+function formatBytes(bytes) {
+    const n = parseFloat(bytes) || 0;
+    if (n <= 0) return '0 B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    return (n / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+async function getNetworkMetrics() {
+    let rxTotal = 0;
+    let txTotal = 0;
+
+    // Fast Linux /proc/net/dev reader (< 0.1ms)
+    if (process.platform === 'linux' && fs.existsSync('/proc/net/dev')) {
+        try {
+            const raw = fs.readFileSync('/proc/net/dev', 'utf8');
+            for (const line of raw.split('\n')) {
+                const trimmed = line.trim();
+                if (!trimmed.includes(':') || trimmed.startsWith('lo:')) continue;
+                const parts = trimmed.split(':')[1].trim().split(/\s+/);
+                rxTotal += parseInt(parts[0], 10) || 0;
+                txTotal += parseInt(parts[8], 10) || 0;
+            }
+        } catch {
+            // fallback
+        }
+    }
+
+    // Windows or non-proc fallback
+    if (rxTotal === 0 && txTotal === 0) {
+        try {
+            const stats = await si.networkStats();
+            if (Array.isArray(stats)) {
+                for (const iface of stats) {
+                    if (iface.operstate === 'up' && iface.iface !== 'lo') {
+                        rxTotal += iface.rx_bytes || 0;
+                        txTotal += iface.tx_bytes || 0;
+                    }
+                }
+            }
+        } catch {
+            // fallback
+        }
+    }
+
+    const now = Date.now();
+    let rxSec = 0;
+    let txSec = 0;
+
+    if (prevNetSample.time > 0 && now > prevNetSample.time && rxTotal >= prevNetSample.rxBytes) {
+        const deltaSec = (now - prevNetSample.time) / 1000;
+        if (deltaSec > 0.5) {
+            rxSec = Math.round((rxTotal - prevNetSample.rxBytes) / deltaSec);
+            txSec = Math.round((txTotal - prevNetSample.txBytes) / deltaSec);
+        }
+    }
+
+    if (rxTotal > 0 || txTotal > 0) {
+        prevNetSample = { time: now, rxBytes: rxTotal, txBytes: txTotal };
+    }
+
+    return {
+        rxSec,
+        txSec,
+        rxRateStr: formatSpeed(rxSec),
+        txRateStr: formatSpeed(txSec),
+        rxTotalStr: formatBytes(rxTotal),
+        txTotalStr: formatBytes(txTotal)
+    };
+}
 
 async function getSystemStats() {
     const mem = await si.mem();
     const cpu = await si.currentLoad();
     const disk = await si.fsSize();
     const time = si.time();
+    const net = await getNetworkMetrics();
 
     let pgStatus = 'Offline';
     try {
-        execSync('pg_isready -q');
+        execSync('pg_isready -q', { timeout: 1000, stdio: 'ignore' });
         pgStatus = 'Online';
     } catch {
         pgStatus = 'Offline';
@@ -80,7 +167,13 @@ async function getSystemStats() {
         diskUsedPercent,
         diskFreePercent,
         uptimeHours: (time.uptime / 3600).toFixed(1),
-        pgStatus
+        pgStatus,
+        rxSec: net.rxSec,
+        txSec: net.txSec,
+        rxRateStr: net.rxRateStr,
+        txRateStr: net.txRateStr,
+        rxTotalStr: net.rxTotalStr,
+        txTotalStr: net.txTotalStr
     };
 }
 
