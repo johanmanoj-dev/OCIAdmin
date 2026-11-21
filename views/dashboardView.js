@@ -231,6 +231,8 @@ function renderDashboardPage() {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
             margin-bottom: 14px;
         }
 
@@ -319,29 +321,104 @@ function renderDashboardPage() {
             font-variant-numeric: tabular-nums;
         }
 
-        /* 2-Column Grid for Dual Network Graphs */
-        .network-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* Telemetry Master Grid (Adaptive) */
+        .telemetry-grid {
+            display: flex;
+            flex-direction: column;
             gap: 16px;
-        }
-
-        @media (max-width: 768px) {
-            .network-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         /* Grid Row for System Items */
         .system-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 14px;
         }
 
-        @media (max-width: 580px) {
+        /* Mobile Optimization: Comfortable Single-Column Layout on Handhelds */
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 12px;
+            }
+            .top-bar {
+                padding: 12px 14px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .telemetry-card {
+                padding: 16px 16px;
+            }
+        }
+
+        @media (min-width: 580px) and (max-width: 959px) {
             .system-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Desktop & Wide PC Screens: Broad Spaced Admin Command Center */
+        @media (min-width: 960px) {
+            body {
+                padding: 40px 32px;
+            }
+
+            .dashboard-container {
+                max-width: 1360px;
+                gap: 22px;
+            }
+
+            .top-bar {
+                padding: 18px 24px;
+            }
+
+            .brand-logo-small {
+                width: 32px;
+                height: 32px;
+            }
+
+            .brand-text-title {
+                font-size: 16px;
+            }
+
+            .brand-text-sub {
+                font-size: 12px;
+            }
+
+            .node-bar-container {
+                padding: 10px 16px;
+            }
+
+            /* 2x2 Command Center Grid for the 4 Telemetry Waveforms */
+            .telemetry-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 22px;
+            }
+
+            /* 2-Column Wide Grid for System Vitals */
+            .system-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 22px;
+            }
+
+            .telemetry-card {
+                padding: 24px 26px;
+            }
+
+            .grid-card {
+                padding: 22px 24px;
+            }
+
+            .chart-wrapper {
+                height: 125px; /* Spacious, crisp waveforms on PC monitors */
+            }
+
+            .metric-big-num {
+                font-size: 28px;
             }
         }
 
@@ -598,92 +675,92 @@ function renderDashboardPage() {
             </button>
         </section>
 
-        <!-- Memory Telemetry Panel with Real Time-Series Area Chart -->
-        <section class="telemetry-card">
-            <div class="card-header-row">
-                <div class="metric-label-group">
-                    <span class="metric-title">Active Memory Allocation (RAM)</span>
-                    <div class="metric-headline">
-                        <span class="metric-big-num" id="memPercent">--%</span>
-                        <span class="metric-sub-num" id="memDetail">-- MB / -- MB</span>
+        <!-- Real-Time Telemetry Grid (2x2 Matrix on Desktop PC, Single-Column Stack on Mobile) -->
+        <div class="telemetry-grid">
+            <!-- Memory Telemetry Panel with Real Time-Series Area Chart -->
+            <section class="telemetry-card">
+                <div class="card-header-row">
+                    <div class="metric-label-group">
+                        <span class="metric-title">Active Memory Allocation (RAM)</span>
+                        <div class="metric-headline">
+                            <span class="metric-big-num" id="memPercent">--%</span>
+                            <span class="metric-sub-num" id="memDetail">-- MB / -- MB</span>
+                        </div>
+                    </div>
+                    <div id="safeBadgeContainer">
+                        <span class="badge-status badge-safe" id="safeBadge">Monitoring...</span>
                     </div>
                 </div>
-                <div id="safeBadgeContainer">
-                    <span class="badge-status badge-safe" id="safeBadge">Monitoring...</span>
+
+                <!-- SVG Real-Time Graph -->
+                <div class="chart-wrapper">
+                    <svg id="memSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.28" />
+                                <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="20" x2="500" y2="20" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
+                        <!-- Oracle 20% Threshold Line: y = 71 -->
+                        <line x1="0" y1="71" x2="500" y2="71" stroke="#eab308" stroke-dasharray="3,3" stroke-width="1" stroke-opacity="0.6" />
+                        <text x="8" y="67" fill="#eab308" font-size="8" font-family="-apple-system, sans-serif" font-weight="600" opacity="0.8" letter-spacing="0.04em">20% ORACLE RECLAMATION LIMIT</text>
+                        <path id="memArea" fill="url(#memGrad)" d="" />
+                        <path id="memLine" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
+                        <circle id="memDot" cx="-10" cy="-10" r="3.5" fill="#22c55e" />
+                    </svg>
                 </div>
-            </div>
+                <div class="chart-footer">
+                    <span>-95s</span>
+                    <span>-75s</span>
+                    <span>-50s</span>
+                    <span>-25s</span>
+                    <span>Now (5s ticks)</span>
+                </div>
+            </section>
 
-            <!-- SVG Real-Time Graph -->
-            <div class="chart-wrapper">
-                <svg id="memSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.28" />
-                            <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0" />
-                        </linearGradient>
-                    </defs>
-                    <line x1="0" y1="20" x2="500" y2="20" stroke="#121212" stroke-width="1" />
-                    <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
-                    <!-- Oracle 20% Threshold Line: y = 71 -->
-                    <line x1="0" y1="71" x2="500" y2="71" stroke="#eab308" stroke-dasharray="3,3" stroke-width="1" stroke-opacity="0.6" />
-                    <text x="8" y="67" fill="#eab308" font-size="8" font-family="-apple-system, sans-serif" font-weight="600" opacity="0.8" letter-spacing="0.04em">20% ORACLE RECLAMATION LIMIT</text>
-                    <path id="memArea" fill="url(#memGrad)" d="" />
-                    <path id="memLine" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
-                    <circle id="memDot" cx="-10" cy="-10" r="3.5" fill="#22c55e" />
-                </svg>
-            </div>
-            <div class="chart-footer">
-                <span>-95s</span>
-                <span>-75s</span>
-                <span>-50s</span>
-                <span>-25s</span>
-                <span>Now (5s ticks)</span>
-            </div>
-        </section>
-
-        <!-- CPU Load Panel with Real Time-Series Area Chart -->
-        <section class="telemetry-card">
-            <div class="card-header-row">
-                <div class="metric-label-group">
-                    <span class="metric-title">Compute Utilization (CPU)</span>
-                    <div class="metric-headline">
-                        <span class="metric-big-num" id="cpuVal">--%</span>
-                        <span class="metric-sub-num" id="cpuSub">Load Average</span>
+            <!-- CPU Load Panel with Real Time-Series Area Chart -->
+            <section class="telemetry-card">
+                <div class="card-header-row">
+                    <div class="metric-label-group">
+                        <span class="metric-title">Compute Utilization (CPU)</span>
+                        <div class="metric-headline">
+                            <span class="metric-big-num" id="cpuVal">--%</span>
+                            <span class="metric-sub-num" id="cpuSub">Load Average</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="metric-sub-num">Uptime: <strong id="uptimeVal" style="color: #ffffff;">--</strong>h</span>
                     </div>
                 </div>
-                <div>
-                    <span class="metric-sub-num">Uptime: <strong id="uptimeVal" style="color: #ffffff;">--</strong>h</span>
+
+                <!-- SVG Real-Time Graph -->
+                <div class="chart-wrapper">
+                    <svg id="cpuSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25" />
+                                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="25" x2="500" y2="25" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="75" x2="500" y2="75" stroke="#121212" stroke-width="1" />
+                        <path id="cpuArea" fill="url(#cpuGrad)" d="" />
+                        <path id="cpuLine" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
+                        <circle id="cpuDot" cx="-10" cy="-10" r="3.5" fill="#38bdf8" />
+                    </svg>
                 </div>
-            </div>
+                <div class="chart-footer">
+                    <span>-95s</span>
+                    <span>-75s</span>
+                    <span>-50s</span>
+                    <span>-25s</span>
+                    <span>Now (5s ticks)</span>
+                </div>
+            </section>
 
-            <!-- SVG Real-Time Graph -->
-            <div class="chart-wrapper">
-                <svg id="cpuSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25" />
-                            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
-                        </linearGradient>
-                    </defs>
-                    <line x1="0" y1="25" x2="500" y2="25" stroke="#121212" stroke-width="1" />
-                    <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
-                    <line x1="0" y1="75" x2="500" y2="75" stroke="#121212" stroke-width="1" />
-                    <path id="cpuArea" fill="url(#cpuGrad)" d="" />
-                    <path id="cpuLine" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
-                    <circle id="cpuDot" cx="-10" cy="-10" r="3.5" fill="#38bdf8" />
-                </svg>
-            </div>
-            <div class="chart-footer">
-                <span>-95s</span>
-                <span>-75s</span>
-                <span>-50s</span>
-                <span>-25s</span>
-                <span>Now (5s ticks)</span>
-            </div>
-        </section>
-
-        <!-- Network Dual Telemetry Panels (Clean Visible Graphs) -->
-        <div class="network-grid">
             <!-- Download (RX) Panel -->
             <section class="telemetry-card">
                 <div class="card-header-row">
