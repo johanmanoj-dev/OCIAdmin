@@ -68,17 +68,24 @@ function renderLoginPage({ hasError = false } = {}) {
             margin-bottom: 28px;
         }
 
-        .brand-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background-color: #0d0d0d;
-            border: 1px solid #262626;
+        .brand-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
-            color: #ffffff;
+            margin-bottom: 18px;
+        }
+
+        .brand-logo {
+            width: 78px;
+            height: auto;
+            max-height: 52px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.15));
+            transition: transform 200ms ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.04);
         }
 
         .brand-title {
@@ -260,8 +267,8 @@ function renderLoginPage({ hasError = false } = {}) {
     <img class="bg-watermark" src="/logo.png" alt="" aria-hidden="true" />
     <main class="login-card">
         <header class="brand-header">
-            <div class="brand-icon" aria-hidden="true">
-                <img src="/logo.png" alt="Logo" style="width: 26px; height: 26px; object-fit: contain;" />
+            <div class="brand-logo-container">
+                <img class="brand-logo" src="/logo.png" alt="Logo" />
             </div>
             <h1 class="brand-title">OCI Telemetry Console</h1>
             <p class="brand-subtitle">Sign in to monitor instance health and metrics</p>
