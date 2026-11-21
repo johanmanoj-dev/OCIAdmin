@@ -182,14 +182,15 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Reload and start service
+# Reload and restart service (cleanly restarts existing process if already running)
 systemctl daemon-reload
-systemctl enable --now oci-agent.service
+systemctl enable oci-agent.service
+systemctl restart oci-agent.service
 
 echo ""
 echo "========================================================="
 echo " ✓ OCI Telemetry Agent installed and running persistently!"
 echo "   Status: Active (Systemd: oci-agent.service)"
-echo "   Beacon Interval: 5 seconds"
+echo "   Mode:   Adaptive On-Demand (Standby 15s / Live 3s)"
 echo "   View live stats on: $HUB_URL"
 echo "========================================================="
