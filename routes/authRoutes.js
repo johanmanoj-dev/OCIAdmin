@@ -12,6 +12,12 @@ router.get('/logo.png', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'logo.png'));
 });
 
+// GET /install-agent.sh
+router.get('/install-agent.sh', (req, res) => {
+    res.type('text/plain');
+    res.sendFile(path.join(__dirname, '..', 'public', 'install-agent.sh'));
+});
+
 // GET /login
 router.get('/login', (req, res) => {
     if (req.session && req.session.authenticated) {

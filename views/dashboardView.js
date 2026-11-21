@@ -72,7 +72,6 @@ function renderDashboardPage() {
         .brand-text-sub {
             font-size: 11px;
             color: #71717a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .header-actions {
@@ -126,6 +125,97 @@ function renderDashboardPage() {
             color: #ffffff;
             border-color: #404040;
             background-color: #171717;
+        }
+
+        /* Node Switcher Bar */
+        .node-bar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background-color: #050505;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 8px 12px;
+        }
+
+        .node-pills-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .node-pills-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .node-pill {
+            background-color: #0a0a0a;
+            border: 1px solid #222222;
+            color: #a1a1aa;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 150ms ease;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .node-pill:hover {
+            color: #ffffff;
+            border-color: #3b3b3b;
+            background-color: #121212;
+        }
+
+        .node-pill.active {
+            background-color: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            font-weight: 600;
+        }
+
+        .node-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            box-shadow: 0 0 5px rgba(34, 197, 94, 0.6);
+            flex-shrink: 0;
+        }
+
+        .node-status-dot.offline {
+            background-color: #ef4444;
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-connect-node {
+            background-color: transparent;
+            border: 1px dashed #333333;
+            color: #a1a1aa;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 150ms ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-connect-node:hover {
+            color: #ffffff;
+            border-color: #555555;
+            background-color: #111111;
         }
 
         /* Telemetry Cards */
@@ -308,17 +398,165 @@ function renderDashboardPage() {
             color: #52525b;
             padding: 4px 0;
         }
+
+        /* Modal Overlay & Card */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 180ms ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background-color: #080808;
+            border: 1px solid #1f1f1f;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 540px;
+            padding: 26px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .modal-subtitle {
+            font-size: 12px;
+            color: #71717a;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #71717a;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: color 150ms ease;
+        }
+
+        .modal-close-btn:hover {
+            color: #ffffff;
+        }
+
+        .modal-input-group {
+            margin-bottom: 14px;
+        }
+
+        .modal-label {
+            display: block;
+            font-size: 12px;
+            color: #a1a1aa;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .modal-input {
+            width: 100%;
+            height: 38px;
+            background-color: #000000;
+            border: 1px solid #262626;
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 150ms ease;
+        }
+
+        .modal-input:focus {
+            border-color: #ffffff;
+        }
+
+        .code-box-container {
+            position: relative;
+            margin-top: 14px;
+            margin-bottom: 16px;
+        }
+
+        .code-box {
+            background-color: #000000;
+            border: 1px solid #1f1f1f;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+            color: #38bdf8;
+            line-height: 1.4;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .btn-copy {
+            width: 100%;
+            height: 42px;
+            background-color: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+        }
+
+        .btn-copy:hover {
+            background-color: #e5e5e5;
+        }
+
+        .modal-tip {
+            font-size: 11px;
+            color: #52525b;
+            margin-top: 14px;
+            text-align: center;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
     <main class="dashboard-container">
-        <!-- Header -->
+        <!-- Top Nav Bar -->
         <header class="top-bar">
             <div class="brand-cluster">
                 <img class="brand-logo-small" src="/logo.png" alt="Logo" />
                 <div>
                     <h1 class="brand-text-title">OCI Telemetry Console</h1>
-                    <div class="brand-text-sub">Oracle Always-Free VM &bull; 130.210.115.179</div>
+                    <div class="brand-text-sub" id="activeNodeSub">Active Node: ARM Primary &bull; 130.210.115.179</div>
                 </div>
             </div>
             <div class="header-actions">
@@ -330,7 +568,24 @@ function renderDashboardPage() {
             </div>
         </header>
 
-        <!-- Memory Telemetry Panel with Live Time-Series Area Chart -->
+        <!-- Multi-Node Switcher Bar -->
+        <section class="node-bar-container">
+            <div class="node-pills-list" id="nodePillsList">
+                <button class="node-pill active" data-node="local" type="button">
+                    <span class="node-status-dot"></span>
+                    <span>ARM Primary</span>
+                </button>
+            </div>
+            <button class="btn-connect-node" id="btnOpenConnectModal" type="button">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Connect Node</span>
+            </button>
+        </section>
+
+        <!-- Memory Telemetry Panel with Real Time-Series Area Chart -->
         <section class="telemetry-card">
             <div class="card-header-row">
                 <div class="metric-label-group">
@@ -354,13 +609,11 @@ function renderDashboardPage() {
                             <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0" />
                         </linearGradient>
                     </defs>
-                    <!-- Background Grid -->
                     <line x1="0" y1="20" x2="500" y2="20" stroke="#121212" stroke-width="1" />
                     <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
-                    <!-- Oracle 20% Threshold Line: y = 100 - (20 * 0.7 + 15) = 71 -->
+                    <!-- Oracle 20% Threshold Line: y = 71 -->
                     <line x1="0" y1="71" x2="500" y2="71" stroke="#eab308" stroke-dasharray="3,3" stroke-width="1" stroke-opacity="0.6" />
                     <text x="8" y="67" fill="#eab308" font-size="8" font-family="-apple-system, sans-serif" font-weight="600" opacity="0.8" letter-spacing="0.04em">20% ORACLE RECLAMATION LIMIT</text>
-                    <!-- Area & Line Path will be drawn dynamically -->
                     <path id="memArea" fill="url(#memGrad)" d="" />
                     <path id="memLine" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
                     <circle id="memDot" cx="-10" cy="-10" r="3.5" fill="#22c55e" />
@@ -375,14 +628,14 @@ function renderDashboardPage() {
             </div>
         </section>
 
-        <!-- CPU Load Panel with Live Time-Series Area Chart -->
+        <!-- CPU Load Panel with Real Time-Series Area Chart -->
         <section class="telemetry-card">
             <div class="card-header-row">
                 <div class="metric-label-group">
                     <span class="metric-title">Compute Utilization (CPU)</span>
                     <div class="metric-headline">
                         <span class="metric-big-num" id="cpuVal">--%</span>
-                        <span class="metric-sub-num" id="cpuSub">Load Average: Active</span>
+                        <span class="metric-sub-num" id="cpuSub">Load Average</span>
                     </div>
                 </div>
                 <div>
@@ -399,7 +652,6 @@ function renderDashboardPage() {
                             <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
                         </linearGradient>
                     </defs>
-                    <!-- Background Grid -->
                     <line x1="0" y1="25" x2="500" y2="25" stroke="#121212" stroke-width="1" />
                     <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
                     <line x1="0" y1="75" x2="500" y2="75" stroke="#121212" stroke-width="1" />
@@ -419,20 +671,20 @@ function renderDashboardPage() {
 
         <!-- System Vitals 2-Card Row -->
         <div class="system-grid">
-            <!-- PostgreSQL -->
+            <!-- Database Service -->
             <section class="grid-card">
-                <span class="grid-card-title">Database Service</span>
+                <span class="grid-card-title" id="pgCardTitle">Database Service</span>
                 <div class="grid-card-value" id="pgStatusBox">
                     <span class="status-dot" id="pgDot"></span>
                     <span id="pgVal">Checking...</span>
                 </div>
                 <div class="grid-card-meta">
-                    <span>Engine: PostgreSQL 16</span>
-                    <span>Port: 5432 (Local)</span>
+                    <span id="pgMetaLeft">Engine: PostgreSQL 16</span>
+                    <span id="pgMetaRight">Port: 5432 (Local)</span>
                 </div>
             </section>
 
-            <!-- Disk Storage -->
+            <!-- Boot Volume Storage Card (Accurate Used vs Remaining) -->
             <section class="grid-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span class="grid-card-title">Boot Volume Storage</span>
@@ -455,22 +707,63 @@ function renderDashboardPage() {
             </section>
         </div>
 
-        <footer class="footer-note">
+        <footer class="footer-note" id="footerNodeInfo">
             Internal Loopback Gateway &bull; Pinned Memory Buffer (420 MB) &bull; PM2 Managed
         </footer>
     </main>
 
+    <!-- Connect Node Modal -->
+    <div class="modal-overlay" id="connectModalOverlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-labelledby="modalTitle">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="modalTitle">Connect Remote Linux Node</h2>
+                    <p class="modal-subtitle">One command configures a persistent background beacon on any stock VM.</p>
+                </div>
+                <button class="modal-close-btn" id="btnCloseConnectModal" type="button" aria-label="Close dialog">&times;</button>
+            </div>
+
+            <div class="modal-input-group">
+                <label class="modal-label" for="nodeNameInput">Node Name / Label</label>
+                <input class="modal-input" id="nodeNameInput" type="text" value="OCI-AMD-VM" placeholder="e.g. OCI-AMD-VM" />
+            </div>
+
+            <div class="modal-input-group">
+                <label class="modal-label" for="nodeTokenInput">Node Ingestion Token</label>
+                <input class="modal-input" id="nodeTokenInput" type="text" readonly />
+            </div>
+
+            <div class="code-box-container">
+                <div class="code-box" id="installCmdBox">Loading command...</div>
+            </div>
+
+            <button class="btn-copy" id="btnCopyCommand" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copyBtnText">Copy Command</span>
+            </button>
+
+            <p class="modal-tip">Paste into the terminal of your remote VM. It will automatically run persistently via systemd and report live metrics every 5 seconds.</p>
+        </div>
+    </div>
+
     <script>
-        // Keep in-memory rolling history of 20 ticks (100 seconds of history at 5s interval)
         const MAX_TICKS = 20;
-        const memHistory = [];
-        const cpuHistory = [];
+        let activeNodeId = 'local';
+        let activeNodeToken = '';
+
+        // In-memory histories mapped by nodeId
+        const nodeHistories = {
+            local: { mem: [], cpu: [] }
+        };
 
         function renderTimeSeries(values, lineElId, areaElId, dotElId, maxScale = 100) {
             const lineEl = document.getElementById(lineElId);
             const areaEl = document.getElementById(areaElId);
             const dotEl = document.getElementById(dotElId);
-            if (!lineEl || !areaEl || values.length === 0) return;
+            if (!lineEl || !areaEl || !values || values.length === 0) return;
 
             const width = 500;
             const height = 100;
@@ -478,7 +771,6 @@ function renderDashboardPage() {
             const bottomPad = 15;
             const plotHeight = height - topPad - bottomPad;
 
-            // Generate coordinates
             const points = values.map((val, idx) => {
                 const x = values.length === 1 
                     ? width 
@@ -488,7 +780,6 @@ function renderDashboardPage() {
                 return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
             });
 
-            // Build SVG path strings
             let linePath = "M " + points[0].x + " " + points[0].y;
             for (let i = 1; i < points.length; i++) {
                 linePath += " L " + points[i].x + " " + points[i].y;
@@ -508,29 +799,86 @@ function renderDashboardPage() {
             }
         }
 
-        async function fetchStats() {
+        async function fetchNodeList() {
             try {
-                const res = await fetch('/api/stats');
+                const res = await fetch('/api/nodes');
                 if (res.status === 401 || res.redirected) {
                     window.location.href = '/login';
                     return;
                 }
                 const data = await res.json();
+                activeNodeToken = data.activeToken || '';
+                updateInstallCommand();
 
-                const memNum = parseFloat(data.memPercent) || 0;
-                const cpuNum = parseFloat(data.cpuPercent) || 0;
+                const pillsContainer = document.getElementById('nodePillsList');
+                pillsContainer.innerHTML = '';
 
-                // Push to rolling history arrays (zero stress on backend)
-                memHistory.push(memNum);
-                if (memHistory.length > MAX_TICKS) memHistory.shift();
+                data.nodes.forEach(n => {
+                    const btn = document.createElement('button');
+                    btn.className = 'node-pill' + (n.id === activeNodeId ? ' active' : '');
+                    btn.type = 'button';
+                    btn.dataset.node = n.id;
+                    
+                    const dotClass = n.isOnline ? 'node-status-dot' : 'node-status-dot offline';
+                    btn.innerHTML = '<span class="' + dotClass + '"></span><span>' + n.name + '</span>';
+                    btn.addEventListener('click', () => {
+                        activeNodeId = n.id;
+                        document.querySelectorAll('.node-pill').forEach(p => p.classList.remove('active'));
+                        btn.classList.add('active');
+                        fetchActiveStats();
+                    });
 
-                cpuHistory.push(cpuNum);
-                if (cpuHistory.length > MAX_TICKS) cpuHistory.shift();
+                    pillsContainer.appendChild(btn);
+                });
+            } catch (e) {
+                console.error("Error fetching nodes list:", e);
+            }
+        }
 
-                // 1. Update Memory Stats & Chart
+        async function fetchActiveStats() {
+            try {
+                const url = activeNodeId === 'local' 
+                    ? '/api/nodes/local/stats' 
+                    : '/api/nodes/' + encodeURIComponent(activeNodeId) + '/stats';
+
+                const res = await fetch(url);
+                if (res.status === 401 || res.redirected) {
+                    window.location.href = '/login';
+                    return;
+                }
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const nodeInfo = data.node || {};
+                const stats = data.stats || {};
+
+                // Update node title bar
+                document.getElementById('activeNodeSub').innerText = 'Active Node: ' + (nodeInfo.name || activeNodeId) + (nodeInfo.ip ? ' • ' + nodeInfo.ip : '');
+
+                const memNum = parseFloat(stats.memPercent) || 0;
+                const cpuNum = parseFloat(stats.cpuPercent) || 0;
+
+                // Manage history
+                if (!nodeHistories[activeNodeId]) {
+                    nodeHistories[activeNodeId] = { mem: [], cpu: [] };
+                }
+
+                // If remote node sent history from backend, use it
+                if (data.history && data.history.mem && data.history.mem.length > 0) {
+                    nodeHistories[activeNodeId].mem = data.history.mem;
+                    nodeHistories[activeNodeId].cpu = data.history.cpu;
+                } else {
+                    nodeHistories[activeNodeId].mem.push(memNum);
+                    if (nodeHistories[activeNodeId].mem.length > MAX_TICKS) nodeHistories[activeNodeId].mem.shift();
+
+                    nodeHistories[activeNodeId].cpu.push(cpuNum);
+                    if (nodeHistories[activeNodeId].cpu.length > MAX_TICKS) nodeHistories[activeNodeId].cpu.shift();
+                }
+
+                // 1. Memory Panel
                 document.getElementById('memPercent').innerText = memNum.toFixed(1) + '%';
-                document.getElementById('memDetail').innerText = data.memUsedMB + ' MB / ' + data.memTotalMB + ' MB';
-                renderTimeSeries(memHistory, 'memLine', 'memArea', 'memDot', 100);
+                document.getElementById('memDetail').innerText = (stats.memUsedMB || 0) + ' MB / ' + (stats.memTotalMB || 0) + ' MB';
+                renderTimeSeries(nodeHistories[activeNodeId].mem, 'memLine', 'memArea', 'memDot', 100);
 
                 const safeEl = document.getElementById('safeBadge');
                 if (memNum >= 20.0) {
@@ -541,35 +889,52 @@ function renderDashboardPage() {
                     safeEl.innerText = "⚠ Below 20% Limit";
                 }
 
-                // 2. Update CPU Stats & Chart
+                // 2. CPU Panel
                 document.getElementById('cpuVal').innerText = cpuNum.toFixed(1) + '%';
-                document.getElementById('uptimeVal').innerText = data.uptimeHours;
-                renderTimeSeries(cpuHistory, 'cpuLine', 'cpuArea', 'cpuDot', Math.max(10, Math.ceil(Math.max(...cpuHistory, 5) / 10) * 10));
+                document.getElementById('uptimeVal').innerText = stats.uptimeHours || '--';
+                const cpuMax = Math.max(10, Math.ceil(Math.max(...(nodeHistories[activeNodeId].cpu || [5]), 5) / 10) * 10);
+                renderTimeSeries(nodeHistories[activeNodeId].cpu, 'cpuLine', 'cpuArea', 'cpuDot', cpuMax);
 
-                // 3. Update PostgreSQL
+                // 3. PostgreSQL / Services
                 const pgDot = document.getElementById('pgDot');
                 const pgVal = document.getElementById('pgVal');
-                if (data.pgStatus === "Online") {
-                    pgDot.style.backgroundColor = '#22c55e';
-                    pgDot.style.boxShadow = '0 0 6px #22c55e';
-                    pgVal.innerText = 'Online & Ready';
+                const pgTitle = document.getElementById('pgCardTitle');
+                const pgMetaLeft = document.getElementById('pgMetaLeft');
+                const pgMetaRight = document.getElementById('pgMetaRight');
+
+                if (nodeInfo.isLocal) {
+                    pgTitle.innerText = "Database Service";
+                    pgMetaLeft.innerText = "Engine: PostgreSQL 16";
+                    pgMetaRight.innerText = "Port: 5432 (Local)";
+                    if (stats.pgStatus === "Online") {
+                        pgDot.style.backgroundColor = '#22c55e';
+                        pgDot.style.boxShadow = '0 0 6px #22c55e';
+                        pgVal.innerText = 'Online & Accepting Queries';
+                    } else {
+                        pgDot.style.backgroundColor = '#ef4444';
+                        pgDot.style.boxShadow = '0 0 6px #ef4444';
+                        pgVal.innerText = 'Offline';
+                    }
                 } else {
-                    pgDot.style.backgroundColor = '#ef4444';
-                    pgDot.style.boxShadow = '0 0 6px #ef4444';
-                    pgVal.innerText = 'Offline';
+                    pgTitle.innerText = "Node Gateway";
+                    pgMetaLeft.innerText = "Agent: systemd beacon";
+                    pgMetaRight.innerText = "State: " + (nodeInfo.isOnline ? "Connected" : "Disconnected");
+                    pgDot.style.backgroundColor = nodeInfo.isOnline ? '#22c55e' : '#ef4444';
+                    pgDot.style.boxShadow = '0 0 6px ' + (nodeInfo.isOnline ? '#22c55e' : '#ef4444');
+                    pgVal.innerText = nodeInfo.isOnline ? 'Online & Reporting' : 'Beacon Stalled';
                 }
 
-                // 4. Update Disk Storage
-                const totalGB = parseFloat(data.diskTotalGB) || 0;
-                const usedGB = parseFloat(data.diskUsedGB) || 0;
-                const freeGB = parseFloat(data.diskFreeGB) || 0;
-                const usedPercent = parseFloat(data.diskUsedPercent) || (totalGB > 0 ? ((usedGB / totalGB) * 100) : 0);
-                const freePercent = parseFloat(data.diskFreePercent) || (totalGB > 0 ? ((freeGB / totalGB) * 100) : 0);
+                // 4. Storage Card
+                const totalGB = parseFloat(stats.diskTotalGB) || 0;
+                const usedGB = parseFloat(stats.diskUsedGB) || 0;
+                const freeGB = parseFloat(stats.diskFreeGB) || 0;
+                const usedPercent = parseFloat(stats.diskUsedPercent) || (totalGB > 0 ? ((usedGB / totalGB) * 100) : 0);
+                const freePercent = parseFloat(stats.diskFreePercent) || (totalGB > 0 ? ((freeGB / totalGB) * 100) : 0);
 
                 document.getElementById('diskUsedPercent').innerText = usedPercent.toFixed(1) + '% Used';
                 document.getElementById('diskUsedGB').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskTotalGB').innerText = totalGB.toFixed(1) + ' GB';
-                document.getElementById('diskFreeGB').innerText = freeGB.toFixed(1) + ' GB remaining';
+                document.getElementById('diskFreeGB').innerText = freeGB.toFixed(1) + ' GB free';
                 document.getElementById('diskBar').style.width = Math.min(100, Math.max(0, usedPercent)).toFixed(1) + '%';
                 document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
@@ -579,9 +944,59 @@ function renderDashboardPage() {
             }
         }
 
-        // Initial fetch then standard 5000ms polling (no extra load)
-        fetchStats();
-        setInterval(fetchStats, 5000);
+        // Modal Logic
+        const modalOverlay = document.getElementById('connectModalOverlay');
+        const btnOpenModal = document.getElementById('btnOpenConnectModal');
+        const btnCloseModal = document.getElementById('btnCloseConnectModal');
+        const nodeNameInput = document.getElementById('nodeNameInput');
+        const nodeTokenInput = document.getElementById('nodeTokenInput');
+        const installCmdBox = document.getElementById('installCmdBox');
+        const btnCopyCommand = document.getElementById('btnCopyCommand');
+        const copyBtnText = document.getElementById('copyBtnText');
+
+        function updateInstallCommand() {
+            const hostUrl = window.location.origin;
+            const nodeName = (nodeNameInput.value || 'OCI-AMD-VM').trim();
+            const token = activeNodeToken || 'A_iwPd5Yp4Pg-BBq-heg';
+            nodeTokenInput.value = token;
+
+            const cmd = 'sudo bash -c "$(curl -fsSL ' + hostUrl + '/install-agent.sh)" -- --token "' + token + '" --name "' + nodeName + '"';
+            installCmdBox.innerText = cmd;
+        }
+
+        btnOpenModal.addEventListener('click', () => {
+            updateInstallCommand();
+            modalOverlay.classList.add('open');
+        });
+
+        btnCloseModal.addEventListener('click', () => {
+            modalOverlay.classList.remove('open');
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+        });
+
+        nodeNameInput.addEventListener('input', updateInstallCommand);
+
+        btnCopyCommand.addEventListener('click', async () => {
+            const cmd = installCmdBox.innerText;
+            try {
+                await navigator.clipboard.writeText(cmd);
+                copyBtnText.innerText = '✓ Copied!';
+                setTimeout(() => { copyBtnText.innerText = 'Copy Command'; }, 2000);
+            } catch (err) {
+                copyBtnText.innerText = 'Select text above';
+            }
+        });
+
+        // Initialize & Poll
+        fetchNodeList();
+        fetchActiveStats();
+        setInterval(() => {
+            fetchNodeList();
+            fetchActiveStats();
+        }, 5000);
     </script>
 </body>
 </html>`;
