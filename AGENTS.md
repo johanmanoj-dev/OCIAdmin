@@ -38,6 +38,10 @@
 ---
 
 ## 5. Security & Secret Management
+* **Zero Hardcoded Secrets & Fallbacks:**
+  * **Never** hardcode passwords, password hashes, API tokens, session secrets, or node ingest tokens in the codebase.
+  * **Never** provide static fallback strings for sensitive configurations (e.g., `process.env.NODE_INGEST_TOKEN || 'fallback-token'` or `process.env.SESSION_SECRET || 'secret-key'`).
+  * If a secret is missing from `.env`, either fail safely (reject unauthenticated requests / disable the endpoint) or generate non-deterministic, cryptographically secure random bytes dynamically in memory at runtime (`crypto.randomBytes(32)`).
 * Never commit `.env` or raw credentials to git.
 * Keep `.env` and sensitive keys (`*.key`, `*.pem`) listed in `.gitignore`.
 

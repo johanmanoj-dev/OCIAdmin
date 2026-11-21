@@ -8,6 +8,21 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
+// Trust Nginx reverse proxy so req.ip and req.protocol accurately reflect client IP & HTTPS
+app.set('trust proxy', 1);
+
+// Hide server identification
+app.disable('x-powered-by');
+
+// Defense-in-depth security headers (Clickjacking, MIME sniffing, Referrer protection)
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    next();
+});
+
 // Static assets
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,8 +36,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Set to true behind HTTPS reverse proxy
-        httpOnly: true,
+        secure: 'auto', // Automatically uses Secure flag when request arrives over HTTPS
+        httpOnly: true,  // Immune to client-side document.cookie theft
+        sameSite: 'lax', // CSRF defense
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));

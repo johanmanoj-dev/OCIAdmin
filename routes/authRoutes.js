@@ -1,4 +1,5 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { loginLimiter } = require('../middleware/rateLimiter');
@@ -28,18 +29,47 @@ router.get('/login', (req, res) => {
 });
 
 // POST /login
-router.post('/login', loginLimiter, (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     const { admin } = config;
 
-    const isUserMatch = username === admin.username;
-    const isPasswordMatch = (admin.password && password === admin.password) ||
-                            (admin.hash && bcrypt.compareSync(password, admin.hash));
+    // Strict input type check to prevent type-confusion or crash payloads
+    if (typeof username !== 'string' || typeof password !== 'string') {
+        return res.redirect('/login?err=1');
+    }
+
+    const trimmedUser = username.trim();
+    const isUserMatch = trimmedUser === admin.username;
+
+    let isPasswordMatch = false;
+
+    if (admin.hash) {
+        try {
+            isPasswordMatch = await bcrypt.compare(password, admin.hash);
+        } catch {
+            isPasswordMatch = false;
+        }
+    } else if (admin.password) {
+        // Timing-safe comparison if plain text fallback is used
+        const bufA = Buffer.from(password);
+        const bufB = Buffer.from(admin.password);
+        if (bufA.length === bufB.length) {
+            isPasswordMatch = crypto.timingSafeEqual(bufA, bufB);
+        }
+    }
 
     if (isUserMatch && isPasswordMatch) {
-        req.session.authenticated = true;
-        req.session.user = username;
-        return res.redirect('/');
+        // Regenerate session to prevent session fixation attacks
+        return req.session.regenerate((err) => {
+            if (err) {
+                return res.redirect('/login?err=1');
+            }
+            req.session.authenticated = true;
+            req.session.user = trimmedUser;
+            req.session.save(() => {
+                res.redirect('/');
+            });
+        });
     }
 
     return res.redirect('/login?err=1');

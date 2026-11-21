@@ -10,7 +10,7 @@ const router = express.Router();
 router.post('/nodes/report', (req, res) => {
     const clientToken = req.headers['x-node-token'];
 
-    if (!clientToken || clientToken !== config.nodeIngestToken) {
+    if (!clientToken || !config.nodeIngestToken || clientToken !== config.nodeIngestToken) {
         return res.status(401).json({ error: 'Unauthorized: Invalid or missing x-node-token header' });
     }
 

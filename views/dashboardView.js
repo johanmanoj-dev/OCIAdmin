@@ -957,10 +957,12 @@ function renderDashboardPage() {
         function updateInstallCommand() {
             const hostUrl = window.location.origin;
             const nodeName = (nodeNameInput.value || 'OCI-AMD-VM').trim();
-            const token = activeNodeToken || 'A_iwPd5Yp4Pg-BBq-heg';
+            const token = (activeNodeToken || '').trim();
             nodeTokenInput.value = token;
 
-            const cmd = 'sudo bash -c "$(curl -fsSL ' + hostUrl + '/install-agent.sh)" -- --token "' + token + '" --name "' + nodeName + '"';
+            const cmd = token
+                ? 'sudo bash -c "$(curl -fsSL ' + hostUrl + '/install-agent.sh)" -- --token "' + token + '" --name "' + nodeName + '"'
+                : 'Error: NODE_INGEST_TOKEN is not configured on the server. Please set it in .env first.';
             installCmdBox.innerText = cmd;
         }
 
