@@ -88,34 +88,6 @@ async function getNetworkMetrics() {
 }
 
 async function getTopProcesses() {
-    if (process.platform === 'linux') {
-        try {
-            const raw = execSync('ps -eo pid,user,%cpu,%mem,comm', { timeout: 1500, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-            const lines = raw.trim().split('\n');
-            const list = [];
-            for (let i = 1; i < lines.length; i++) {
-                const parts = lines[i].trim().split(/\s+/);
-                if (parts.length >= 5) {
-                    const pid = parseInt(parts[0], 10);
-                    if (pid <= 0) continue;
-                    list.push({
-                        pid,
-                        user: parts[1] || 'root',
-                        cpu: parseFloat(parts[2]) || 0,
-                        mem: parseFloat(parts[3]) || 0,
-                        name: parts.slice(4).join(' ') || 'unknown'
-                    });
-                }
-            }
-            return {
-                byCpu: [...list].sort((a, b) => b.cpu - a.cpu).slice(0, 10),
-                byMem: [...list].sort((a, b) => b.mem - a.mem).slice(0, 10)
-            };
-        } catch {
-            // fallback to systeminformation
-        }
-    }
-
     try {
         const proc = await si.processes();
         const valid = (proc.list || []).filter(p => p.pid > 0 && p.name !== 'System Idle Process');
@@ -136,6 +108,34 @@ async function getTopProcesses() {
             }))
         };
     } catch {
+        // Fast Linux ps fallback if systeminformation encounters an issue
+        if (process.platform === 'linux') {
+            try {
+                const raw = execSync('ps -eo pid,user,%cpu,%mem,comm', { timeout: 1500, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+                const lines = raw.trim().split('\n');
+                const list = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].trim().split(/\s+/);
+                    if (parts.length >= 5) {
+                        const pid = parseInt(parts[0], 10);
+                        if (pid <= 0) continue;
+                        list.push({
+                            pid,
+                            user: parts[1] || 'root',
+                            cpu: parseFloat(parts[2]) || 0,
+                            mem: parseFloat(parts[3]) || 0,
+                            name: parts.slice(4).join(' ') || 'unknown'
+                        });
+                    }
+                }
+                return {
+                    byCpu: [...list].sort((a, b) => b.cpu - a.cpu).slice(0, 10),
+                    byMem: [...list].sort((a, b) => b.mem - a.mem).slice(0, 10)
+                };
+            } catch {
+                // ignore
+            }
+        }
         return { byCpu: [], byMem: [] };
     }
 }

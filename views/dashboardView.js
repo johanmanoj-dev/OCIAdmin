@@ -1225,7 +1225,7 @@ function renderDashboardPage() {
                 const cpuNum = parseFloat(p.cpu) || 0;
                 const memNum = parseFloat(p.mem) || 0;
                 const cpuBar = Math.min(100, Math.max(0, cpuNum)).toFixed(1);
-                const memBar = Math.min(100, Math.max(0, memNum * 2)).toFixed(1);
+                const memBar = Math.min(100, Math.max(0, memNum)).toFixed(1);
 
                 const safeName = (p.name || 'unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const safeUser = (p.user || 'system').replace(/</g, '&lt;').replace(/>/g, '&gt;');
