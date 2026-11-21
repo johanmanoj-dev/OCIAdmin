@@ -40,3 +40,11 @@
 ## 5. Security & Secret Management
 * Never commit `.env` or raw credentials to git.
 * Keep `.env` and sensitive keys (`*.key`, `*.pem`) listed in `.gitignore`.
+
+---
+
+## 6. Git & Version Control Policy
+> [!IMPORTANT]
+> **Do not commit or push changes to Git without receiving explicit instruction or permission from the user first.**
+>
+> All Git commits and pushes must be initiated or confirmed by the user. Keep working changes staged or unstaged locally until directed.

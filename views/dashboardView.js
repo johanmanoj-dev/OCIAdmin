@@ -434,16 +434,23 @@ function renderDashboardPage() {
 
             <!-- Disk Storage -->
             <section class="grid-card">
-                <span class="grid-card-title">NVMe Boot Volume</span>
-                <div class="grid-card-value" id="diskUsageVal">
-                    -- GB Free
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="grid-card-title">Boot Volume Storage</span>
+                    <span id="diskUsedPercent" style="font-size: 11px; font-weight: 600; color: #a1a1aa; font-variant-numeric: tabular-nums;">--% Used</span>
+                </div>
+                <div class="grid-card-value" style="display: flex; align-items: baseline; justify-content: space-between;">
+                    <div>
+                        <strong id="diskUsedGB" style="font-size: 18px; color: #ffffff;">-- GB</strong>
+                        <span style="font-size: 12px; color: #71717a;">/ <span id="diskTotalGB">-- GB</span></span>
+                    </div>
+                    <span id="diskFreeGB" style="font-size: 12px; color: #4ade80; font-weight: 500;">-- GB free</span>
                 </div>
                 <div class="progress-bar-thin">
                     <div class="progress-fill-thin" id="diskBar"></div>
                 </div>
                 <div class="grid-card-meta">
-                    <span id="diskDetail">-- GB total</span>
-                    <span id="diskPercent">--% available</span>
+                    <span>Used: <strong id="diskUsedMeta" style="color: #ffffff;">-- GB</strong></span>
+                    <span>Remaining: <strong id="diskFreeMeta" style="color: #4ade80;">-- GB</strong></span>
                 </div>
             </section>
         </div>
@@ -553,15 +560,19 @@ function renderDashboardPage() {
                 }
 
                 // 4. Update Disk Storage
+                const totalGB = parseFloat(data.diskTotalGB) || 0;
+                const usedGB = parseFloat(data.diskUsedGB) || 0;
                 const freeGB = parseFloat(data.diskFreeGB) || 0;
-                const totalGB = parseFloat(data.diskTotalGB) || 1;
-                const usedGB = Math.max(0, totalGB - freeGB).toFixed(1);
-                const usedPercent = Math.min(100, Math.round((usedGB / totalGB) * 100));
+                const usedPercent = parseFloat(data.diskUsedPercent) || (totalGB > 0 ? ((usedGB / totalGB) * 100) : 0);
+                const freePercent = parseFloat(data.diskFreePercent) || (totalGB > 0 ? ((freeGB / totalGB) * 100) : 0);
 
-                document.getElementById('diskUsageVal').innerText = freeGB + ' GB Free';
-                document.getElementById('diskBar').style.width = (100 - usedPercent) + '%';
-                document.getElementById('diskDetail').innerText = totalGB + ' GB volume (' + usedGB + ' GB in use)';
-                document.getElementById('diskPercent').innerText = (100 - usedPercent) + '% free';
+                document.getElementById('diskUsedPercent').innerText = usedPercent.toFixed(1) + '% Used';
+                document.getElementById('diskUsedGB').innerText = usedGB.toFixed(1) + ' GB';
+                document.getElementById('diskTotalGB').innerText = totalGB.toFixed(1) + ' GB';
+                document.getElementById('diskFreeGB').innerText = freeGB.toFixed(1) + ' GB remaining';
+                document.getElementById('diskBar').style.width = Math.min(100, Math.max(0, usedPercent)).toFixed(1) + '%';
+                document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
+                document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
 
             } catch (e) {
                 console.error("Telemetry fetch error:", e);
