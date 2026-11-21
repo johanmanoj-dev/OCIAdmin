@@ -16,8 +16,14 @@ router.post('/nodes/report', (req, res) => {
 
     try {
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
-        const recorded = nodeManager.recordRemoteTelemetry(req.body, clientIp.split(',')[0].trim());
-        return res.json({ success: true, nodeId: recorded.id, timestamp: recorded.lastSeen });
+        const result = nodeManager.recordRemoteTelemetry(req.body, clientIp.split(',')[0].trim());
+        return res.json({
+            success: true,
+            active: result.active,
+            interval: result.interval,
+            nodeId: result.node.id,
+            timestamp: result.node.lastSeen
+        });
     } catch (e) {
         return res.status(400).json({ error: e.message });
     }
@@ -25,6 +31,7 @@ router.post('/nodes/report', (req, res) => {
 
 // 2. List all available nodes (Protected)
 router.get('/nodes', requireAuth, (req, res) => {
+    nodeManager.touchDashboardActivity();
     const remote = nodeManager.getRemoteNodesList();
     const local = {
         id: 'local',
@@ -41,6 +48,7 @@ router.get('/nodes', requireAuth, (req, res) => {
 
 // 3. Get specific node stats (Protected)
 router.get('/nodes/:nodeId/stats', requireAuth, async (req, res) => {
+    nodeManager.touchDashboardActivity();
     const { nodeId } = req.params;
 
     if (nodeId === 'local') {
@@ -91,6 +99,7 @@ router.delete('/nodes/:nodeId', requireAuth, (req, res) => {
 
 // 5. Primary Node Stats (Backward compatible fallback)
 router.get('/stats', requireAuth, async (req, res) => {
+    nodeManager.touchDashboardActivity();
     try {
         const stats = await getSystemStats();
         res.json(stats);

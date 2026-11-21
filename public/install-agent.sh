@@ -63,57 +63,57 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 
 REPORT_URL="${HUB_URL%/}/api/nodes/report"
+IS_ACTIVE=false
+SLEEP_INTERVAL=10
 
 while true; do
-  # 1. RAM Calculation (/proc/meminfo)
-  MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
-  MEM_AVAIL_KB=$(grep MemAvailable /proc/meminfo 2>/dev/null | awk '{print $2}')
-  
-  if [ -n "$MEM_TOTAL_KB" ] && [ -n "$MEM_AVAIL_KB" ] && [ "$MEM_TOTAL_KB" -gt 0 ]; then
-    MEM_USED_KB=$((MEM_TOTAL_KB - MEM_AVAIL_KB))
-    MEM_USED_MB=$((MEM_USED_KB / 1024))
-    MEM_TOTAL_MB=$((MEM_TOTAL_KB / 1024))
-    MEM_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($MEM_USED_KB / $MEM_TOTAL_KB) * 100}")
-  else
-    MEM_USED_MB=0
-    MEM_TOTAL_MB=0
-    MEM_PERCENT="0.0"
-  fi
+  if [ "$IS_ACTIVE" = "true" ]; then
+    # Active mode: collect CPU, RAM, Disk and Uptime
+    MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+    MEM_AVAIL_KB=$(grep MemAvailable /proc/meminfo 2>/dev/null | awk '{print $2}')
 
-  # 2. CPU Calculation (/proc/loadavg)
-  CPU_LOAD_1M=$(awk '{print $1}' /proc/loadavg 2>/dev/null || echo "0.0")
-  CORES=$(nproc 2>/dev/null || echo 1)
-  CPU_PERCENT=$(awk "BEGIN { p = ($CPU_LOAD_1M / $CORES) * 100; if (p > 100) p = 100; printf \"%.1f\", p }")
+    if [ -n "$MEM_TOTAL_KB" ] && [ -n "$MEM_AVAIL_KB" ] && [ "$MEM_TOTAL_KB" -gt 0 ]; then
+      MEM_USED_KB=$((MEM_TOTAL_KB - MEM_AVAIL_KB))
+      MEM_USED_MB=$((MEM_USED_KB / 1024))
+      MEM_TOTAL_MB=$((MEM_TOTAL_KB / 1024))
+      MEM_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($MEM_USED_KB / $MEM_TOTAL_KB) * 100}")
+    else
+      MEM_USED_MB=0
+      MEM_TOTAL_MB=0
+      MEM_PERCENT="0.0"
+    fi
 
-  # 3. Storage Calculation (df -B1 /)
-  DISK_INFO=$(df -B1 / 2>/dev/null | tail -n 1)
-  DISK_TOTAL_B=$(echo "$DISK_INFO" | awk '{print $2}')
-  DISK_USED_B=$(echo "$DISK_INFO" | awk '{print $3}')
-  DISK_FREE_B=$(echo "$DISK_INFO" | awk '{print $4}')
+    CPU_LOAD_1M=$(awk '{print $1}' /proc/loadavg 2>/dev/null || echo "0.0")
+    CORES=$(nproc 2>/dev/null || echo 1)
+    CPU_PERCENT=$(awk "BEGIN { p = ($CPU_LOAD_1M / $CORES) * 100; if (p > 100) p = 100; printf \"%.1f\", p }")
 
-  if [ -n "$DISK_TOTAL_B" ] && [ "$DISK_TOTAL_B" -gt 0 ]; then
-    DISK_TOTAL_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_TOTAL_B / (1024^3)}")
-    DISK_USED_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_USED_B / (1024^3)}")
-    DISK_FREE_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_FREE_B / (1024^3)}")
-    DISK_USED_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($DISK_USED_B / $DISK_TOTAL_B) * 100}")
-    DISK_FREE_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($DISK_FREE_B / $DISK_TOTAL_B) * 100}")
-  else
-    DISK_TOTAL_GB="0.0"
-    DISK_USED_GB="0.0"
-    DISK_FREE_GB="0.0"
-    DISK_USED_PERCENT="0.0"
-    DISK_FREE_PERCENT="0.0"
-  fi
+    DISK_INFO=$(df -B1 / 2>/dev/null | tail -n 1)
+    DISK_TOTAL_B=$(echo "$DISK_INFO" | awk '{print $2}')
+    DISK_USED_B=$(echo "$DISK_INFO" | awk '{print $3}')
+    DISK_FREE_B=$(echo "$DISK_INFO" | awk '{print $4}')
 
-  # 4. Uptime
-  UPTIME_SECS=$(cut -d. -f1 /proc/uptime 2>/dev/null || echo 0)
-  UPTIME_HOURS=$(awk "BEGIN {printf \"%.1f\", $UPTIME_SECS / 3600}")
+    if [ -n "$DISK_TOTAL_B" ] && [ "$DISK_TOTAL_B" -gt 0 ]; then
+      DISK_TOTAL_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_TOTAL_B / (1024^3)}")
+      DISK_USED_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_USED_B / (1024^3)}")
+      DISK_FREE_GB=$(awk "BEGIN {printf \"%.1f\", $DISK_FREE_B / (1024^3)}")
+      DISK_USED_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($DISK_USED_B / $DISK_TOTAL_B) * 100}")
+      DISK_FREE_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($DISK_FREE_B / $DISK_TOTAL_B) * 100}")
+    else
+      DISK_TOTAL_GB="0.0"
+      DISK_USED_GB="0.0"
+      DISK_FREE_GB="0.0"
+      DISK_USED_PERCENT="0.0"
+      DISK_FREE_PERCENT="0.0"
+    fi
 
-  # 5. Send Beacon Payload via curl
-  JSON_DATA=$(cat << JSON
+    UPTIME_SECS=$(cut -d. -f1 /proc/uptime 2>/dev/null || echo 0)
+    UPTIME_HOURS=$(awk "BEGIN {printf \"%.1f\", $UPTIME_SECS / 3600}")
+
+    JSON_DATA=$(cat << JSON
 {
   "nodeId": "$NODE_ID",
   "name": "$NODE_NAME",
+  "standby": false,
   "memPercent": "$MEM_PERCENT",
   "memUsedMB": $MEM_USED_MB,
   "memTotalMB": $MEM_TOTAL_MB,
@@ -127,13 +127,27 @@ while true; do
 }
 JSON
 )
+  else
+    # Standby mode: Zero metric calculations run on this machine!
+    JSON_DATA="{\"nodeId\":\"$NODE_ID\",\"name\":\"$NODE_NAME\",\"standby\":true}"
+  fi
 
-  curl -s -m 4 -X POST "$REPORT_URL" \
+  # Transmit payload and receive Hub active status
+  RESPONSE=$(curl -s -m 4 -X POST "$REPORT_URL" \
     -H "Content-Type: application/json" \
     -H "x-node-token: $NODE_TOKEN" \
-    -d "$JSON_DATA" > /dev/null 2>&1 || true
+    -d "$JSON_DATA" 2>/dev/null || echo "{}")
 
-  sleep 5
+  # If Hub reports active dashboard viewer, switch to active streaming (3s)
+  if echo "$RESPONSE" | grep -q '"active":true'; then
+    IS_ACTIVE=true
+    SLEEP_INTERVAL=3
+  else
+    IS_ACTIVE=false
+    SLEEP_INTERVAL=15
+  fi
+
+  sleep $SLEEP_INTERVAL
 done
 EOF
 

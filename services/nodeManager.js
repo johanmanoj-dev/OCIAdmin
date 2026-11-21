@@ -2,7 +2,18 @@
 const remoteNodes = new Map();
 
 const MAX_HISTORY = 24; // ~2 minutes of rolling history at 5s intervals
-const OFFLINE_THRESHOLD_MS = 20000; // 20 seconds without beacon marks node offline
+const OFFLINE_THRESHOLD_MS = 45000; // 45 seconds without beacon marks node offline
+const VIEWER_TIMEOUT_MS = 12000; // 12 seconds inactivity means no viewer on dashboard
+
+let lastDashboardActivity = 0;
+
+function touchDashboardActivity() {
+    lastDashboardActivity = Date.now();
+}
+
+function isDashboardActive() {
+    return (Date.now() - lastDashboardActivity) < VIEWER_TIMEOUT_MS;
+}
 
 function recordRemoteTelemetry(payload, clientIp = '') {
     if (!payload || !payload.nodeId) {
@@ -12,16 +23,7 @@ function recordRemoteTelemetry(payload, clientIp = '') {
     const {
         nodeId,
         name = nodeId,
-        memPercent = 0,
-        memUsedMB = 0,
-        memTotalMB = 0,
-        cpuPercent = 0,
-        diskTotalGB = '0.0',
-        diskUsedGB = '0.0',
-        diskFreeGB = '0.0',
-        diskUsedPercent = '0.0',
-        diskFreePercent = '0.0',
-        uptimeHours = '0.0'
+        standby = false
     } = payload;
 
     const existing = remoteNodes.get(nodeId) || {
@@ -32,43 +34,67 @@ function recordRemoteTelemetry(payload, clientIp = '') {
         history: {
             mem: [],
             cpu: []
-        }
+        },
+        stats: null
     };
-
-    const memNum = parseFloat(memPercent) || 0;
-    const cpuNum = parseFloat(cpuPercent) || 0;
 
     existing.name = name;
     if (clientIp) existing.ip = clientIp;
     existing.lastSeen = Date.now();
-    existing.stats = {
-        memPercent: memNum.toFixed(1),
-        memUsedMB: parseInt(memUsedMB, 10) || 0,
-        memTotalMB: parseInt(memTotalMB, 10) || 0,
-        cpuPercent: cpuNum.toFixed(1),
-        diskTotalGB: String(diskTotalGB),
-        diskUsedGB: String(diskUsedGB),
-        diskFreeGB: String(diskFreeGB),
-        diskUsedPercent: String(diskUsedPercent),
-        diskFreePercent: String(diskFreePercent),
-        uptimeHours: String(uptimeHours),
-        pgStatus: payload.pgStatus || 'N/A'
-    };
+    existing.isStandby = Boolean(standby);
 
-    // Maintain in-memory time-series history
-    existing.history.mem.push(memNum);
-    if (existing.history.mem.length > MAX_HISTORY) existing.history.mem.shift();
+    if (!standby) {
+        const {
+            memPercent = 0,
+            memUsedMB = 0,
+            memTotalMB = 0,
+            cpuPercent = 0,
+            diskTotalGB = '0.0',
+            diskUsedGB = '0.0',
+            diskFreeGB = '0.0',
+            diskUsedPercent = '0.0',
+            diskFreePercent = '0.0',
+            uptimeHours = '0.0'
+        } = payload;
 
-    existing.history.cpu.push(cpuNum);
-    if (existing.history.cpu.length > MAX_HISTORY) existing.history.cpu.shift();
+        const memNum = parseFloat(memPercent) || 0;
+        const cpuNum = parseFloat(cpuPercent) || 0;
+
+        existing.stats = {
+            memPercent: memNum.toFixed(1),
+            memUsedMB: parseInt(memUsedMB, 10) || 0,
+            memTotalMB: parseInt(memTotalMB, 10) || 0,
+            cpuPercent: cpuNum.toFixed(1),
+            diskTotalGB: String(diskTotalGB),
+            diskUsedGB: String(diskUsedGB),
+            diskFreeGB: String(diskFreeGB),
+            diskUsedPercent: String(diskUsedPercent),
+            diskFreePercent: String(diskFreePercent),
+            uptimeHours: String(uptimeHours),
+            pgStatus: payload.pgStatus || 'N/A'
+        };
+
+        // Maintain in-memory time-series history
+        existing.history.mem.push(memNum);
+        if (existing.history.mem.length > MAX_HISTORY) existing.history.mem.shift();
+
+        existing.history.cpu.push(cpuNum);
+        if (existing.history.cpu.length > MAX_HISTORY) existing.history.cpu.shift();
+    }
 
     remoteNodes.set(nodeId, existing);
-    return existing;
+    const active = isDashboardActive();
+    return {
+        node: existing,
+        active,
+        interval: active ? 3 : 15
+    };
 }
 
 function getRemoteNodesList() {
     const now = Date.now();
     const list = [];
+    const active = isDashboardActive();
 
     for (const [id, node] of remoteNodes.entries()) {
         const isOnline = (now - node.lastSeen) < OFFLINE_THRESHOLD_MS;
@@ -78,6 +104,7 @@ function getRemoteNodesList() {
             ip: node.ip,
             isLocal: false,
             isOnline,
+            isStandby: node.isStandby && !active,
             lastSeen: node.lastSeen,
             stats: node.stats
         });
@@ -92,10 +119,12 @@ function getRemoteNode(nodeId) {
 
     const now = Date.now();
     const isOnline = (now - node.lastSeen) < OFFLINE_THRESHOLD_MS;
+    const active = isDashboardActive();
 
     return {
         ...node,
-        isOnline
+        isOnline,
+        isStandby: node.isStandby && !active
     };
 }
 
@@ -107,5 +136,7 @@ module.exports = {
     recordRemoteTelemetry,
     getRemoteNodesList,
     getRemoteNode,
-    removeRemoteNode
+    removeRemoteNode,
+    touchDashboardActivity,
+    isDashboardActive
 };

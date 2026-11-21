@@ -562,7 +562,7 @@ function renderDashboardPage() {
             <div class="header-actions">
                 <span class="live-badge">
                     <span class="live-dot"></span>
-                    Live 5s
+                    Live 3s (On-Demand)
                 </span>
                 <a href="/logout" class="logout-btn">Sign Out</a>
             </div>
