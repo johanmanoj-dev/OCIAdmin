@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { loginLimiter } = require('../middleware/rateLimiter');
@@ -5,6 +6,11 @@ const { renderLoginPage } = require('../views/loginView');
 const config = require('../config');
 
 const router = express.Router();
+
+// GET /logo.png
+router.get('/logo.png', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'logo.png'));
+});
 
 // GET /login
 router.get('/login', (req, res) => {

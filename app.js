@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const config = require('./config');
@@ -6,6 +7,9 @@ const apiRoutes = require('./routes/apiRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
+
+// Static assets
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parsers
 app.use(express.urlencoded({ extended: true }));

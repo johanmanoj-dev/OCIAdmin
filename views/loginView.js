@@ -31,8 +31,27 @@ function renderLoginPage({ hasError = false } = {}) {
             -webkit-font-smoothing: antialiased;
         }
 
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(85vw, 680px);
+            max-height: 75vh;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.07;
+            mix-blend-mode: screen;
+            user-select: none;
+        }
+
         .login-card {
-            background-color: #000000;
+            position: relative;
+            z-index: 1;
+            background-color: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid #1f1f1f;
             border-radius: 16px;
             width: 100%;
@@ -238,15 +257,11 @@ function renderLoginPage({ hasError = false } = {}) {
     </style>
 </head>
 <body>
+    <img class="bg-watermark" src="/logo.png" alt="" aria-hidden="true" />
     <main class="login-card">
         <header class="brand-header">
             <div class="brand-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                </svg>
+                <img src="/logo.png" alt="Logo" style="width: 26px; height: 26px; object-fit: contain;" />
             </div>
             <h1 class="brand-title">OCI Telemetry Console</h1>
             <p class="brand-subtitle">Sign in to monitor instance health and metrics</p>
@@ -305,12 +320,7 @@ function renderLoginPage({ hasError = false } = {}) {
             </button>
         </form>
 
-        <footer class="login-footer">
-            <span class="security-badge">
-                <span class="status-dot"></span>
-                Internal Node &bull; 127.0.0.1 Loopback
-            </span>
-        </footer>
+        
     </main>
 
     <script>
