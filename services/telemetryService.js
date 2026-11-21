@@ -87,19 +87,77 @@ async function getNetworkMetrics() {
     };
 }
 
+async function getTopProcesses() {
+    if (process.platform === 'linux') {
+        try {
+            const raw = execSync('ps -eo pid,user,%cpu,%mem,comm', { timeout: 1500, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+            const lines = raw.trim().split('\n');
+            const list = [];
+            for (let i = 1; i < lines.length; i++) {
+                const parts = lines[i].trim().split(/\s+/);
+                if (parts.length >= 5) {
+                    const pid = parseInt(parts[0], 10);
+                    if (pid <= 0) continue;
+                    list.push({
+                        pid,
+                        user: parts[1] || 'root',
+                        cpu: parseFloat(parts[2]) || 0,
+                        mem: parseFloat(parts[3]) || 0,
+                        name: parts.slice(4).join(' ') || 'unknown'
+                    });
+                }
+            }
+            return {
+                byCpu: [...list].sort((a, b) => b.cpu - a.cpu).slice(0, 10),
+                byMem: [...list].sort((a, b) => b.mem - a.mem).slice(0, 10)
+            };
+        } catch {
+            // fallback to systeminformation
+        }
+    }
+
+    try {
+        const proc = await si.processes();
+        const valid = (proc.list || []).filter(p => p.pid > 0 && p.name !== 'System Idle Process');
+        return {
+            byCpu: [...valid].sort((a, b) => b.cpu - a.cpu).slice(0, 10).map(p => ({
+                pid: p.pid,
+                user: p.user || 'system',
+                cpu: +(p.cpu.toFixed(1)),
+                mem: +(p.mem.toFixed(1)),
+                name: p.name || 'unknown'
+            })),
+            byMem: [...valid].sort((a, b) => b.mem - a.mem).slice(0, 10).map(p => ({
+                pid: p.pid,
+                user: p.user || 'system',
+                cpu: +(p.cpu.toFixed(1)),
+                mem: +(p.mem.toFixed(1)),
+                name: p.name || 'unknown'
+            }))
+        };
+    } catch {
+        return { byCpu: [], byMem: [] };
+    }
+}
+
 async function getSystemStats() {
-    const mem = await si.mem();
-    const cpu = await si.currentLoad();
-    const disk = await si.fsSize();
+    const [mem, cpu, disk, net, processes] = await Promise.all([
+        si.mem(),
+        si.currentLoad(),
+        si.fsSize(),
+        getNetworkMetrics(),
+        getTopProcesses()
+    ]);
     const time = si.time();
-    const net = await getNetworkMetrics();
 
     let pgStatus = 'Offline';
-    try {
-        execSync('pg_isready -q', { timeout: 1000, stdio: 'ignore' });
-        pgStatus = 'Online';
-    } catch {
-        pgStatus = 'Offline';
+    if (process.platform === 'linux') {
+        try {
+            execSync('pg_isready -q', { timeout: 1000, stdio: 'ignore' });
+            pgStatus = 'Online';
+        } catch {
+            pgStatus = 'Offline';
+        }
     }
 
     const memUsedMB = Math.round(mem.active / 1024 / 1024);
@@ -173,7 +231,8 @@ async function getSystemStats() {
         rxRateStr: net.rxRateStr,
         txRateStr: net.txRateStr,
         rxTotalStr: net.rxTotalStr,
-        txTotalStr: net.txTotalStr
+        txTotalStr: net.txTotalStr,
+        processes
     };
 }
 

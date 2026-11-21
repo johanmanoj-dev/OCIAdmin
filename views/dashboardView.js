@@ -482,6 +482,195 @@ function renderDashboardPage() {
             transition: width 400ms ease;
         }
 
+        /* Top Heavy Processes Inspector */
+        .process-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .process-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .process-card-sub {
+            font-size: 12px;
+            color: #71717a;
+            margin-left: 6px;
+            font-weight: 400;
+        }
+
+        .proc-sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 600;
+        }
+
+        .proc-sort-pills {
+            display: inline-flex;
+            background: #0a0a0a;
+            border: 1px solid #1f1f1f;
+            border-radius: 999px;
+            padding: 2px;
+        }
+
+        .proc-sort-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 150ms ease;
+        }
+
+        .proc-sort-btn:hover {
+            color: #ffffff;
+        }
+
+        .proc-sort-btn.active {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .proc-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+            border: 1px solid #141414;
+            background-color: #020202;
+        }
+
+        .proc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .proc-table th {
+            padding: 10px 12px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #52525b;
+            font-weight: 600;
+            background-color: #050505;
+            border-bottom: 1px solid #141414;
+        }
+
+        .proc-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #0d0d0d;
+            vertical-align: middle;
+            color: #d4d4d8;
+        }
+
+        .proc-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .proc-table tr:hover td {
+            background-color: #090909;
+        }
+
+        .proc-pid {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: #71717a;
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .proc-name {
+            color: #ffffff;
+            font-weight: 600;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .proc-user {
+            color: #a1a1aa;
+            font-size: 11px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .proc-metric-cell {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            font-variant-numeric: tabular-nums;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .proc-bar-bg {
+            width: 50px;
+            height: 4px;
+            background: #141414;
+            border-radius: 999px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .proc-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 300ms ease;
+        }
+
+        .proc-bar-fill.cpu-fill {
+            background-color: #38bdf8;
+        }
+
+        .proc-bar-fill.mem-fill {
+            background-color: #22c55e;
+        }
+
+        .proc-cpu-val {
+            color: #38bdf8;
+            width: 44px;
+            text-align: right;
+        }
+
+        .proc-mem-val {
+            color: #22c55e;
+            width: 44px;
+            text-align: right;
+        }
+
+        .proc-empty {
+            text-align: center;
+            color: #52525b;
+            padding: 24px 0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 580px) {
+            .col-user {
+                display: none;
+            }
+            .proc-bar-bg {
+                display: none;
+            }
+            .proc-table td, .proc-table th {
+                padding: 8px 8px;
+            }
+        }
+
         .footer-note {
             text-align: center;
             font-size: 11px;
@@ -876,6 +1065,45 @@ function renderDashboardPage() {
             </section>
         </div>
 
+        <!-- Top 10 Heavy Processes Panel -->
+        <section class="telemetry-card process-card">
+            <div class="card-header-row" style="margin-bottom: 8px;">
+                <div class="metric-label-group">
+                    <span class="metric-title" style="color: #a1a1aa;">Resource Consumers &bull; Active Workload</span>
+                    <div class="metric-headline" style="align-items: center;">
+                        <span class="process-card-title">Top 10 Heavy Processes</span>
+                        <span class="process-card-sub" id="procNodeSubtitle">Live System Inspector</span>
+                    </div>
+                </div>
+                <div class="proc-sort-controls">
+                    <span class="sort-label">Sort:</span>
+                    <div class="proc-sort-pills">
+                        <button type="button" class="proc-sort-btn active" id="btnSortCpu" data-sort="cpu">CPU %</button>
+                        <button type="button" class="proc-sort-btn" id="btnSortMem" data-sort="mem">RAM %</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proc-table-wrapper">
+                <table class="proc-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 75px;">PID</th>
+                            <th>Process</th>
+                            <th class="col-user" style="width: 95px;">User</th>
+                            <th style="width: 140px; text-align: right;">CPU Load</th>
+                            <th style="width: 140px; text-align: right;">RAM Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processListBody">
+                        <tr>
+                            <td colspan="5" class="proc-empty">Sampling active processes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <footer class="footer-note" id="footerNodeInfo">
             Internal Loopback Gateway &bull; Pinned Memory Buffer (420 MB) &bull; PM2 Managed
         </footer>
@@ -974,6 +1202,67 @@ function renderDashboardPage() {
                 dotEl.setAttribute("cx", lastPoint.x);
                 dotEl.setAttribute("cy", lastPoint.y);
             }
+        }
+
+        // Process Table State & Renderer
+        let currentProcSort = 'cpu';
+        let currentProcesses = { byCpu: [], byMem: [] };
+
+        function renderProcessTable() {
+            const tbody = document.getElementById('processListBody');
+            if (!tbody) return;
+
+            const list = currentProcSort === 'mem' 
+                ? (currentProcesses.byMem || []) 
+                : (currentProcesses.byCpu || []);
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="proc-empty">No active process data available</td></tr>';
+                return;
+            }
+
+            const rowsHtml = list.map(p => {
+                const cpuNum = parseFloat(p.cpu) || 0;
+                const memNum = parseFloat(p.mem) || 0;
+                const cpuBar = Math.min(100, Math.max(0, cpuNum)).toFixed(1);
+                const memBar = Math.min(100, Math.max(0, memNum * 2)).toFixed(1);
+
+                const safeName = (p.name || 'unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeUser = (p.user || 'system').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+                return '<tr>' +
+                    '<td class="proc-pid">#' + p.pid + '</td>' +
+                    '<td class="proc-name"><strong>' + safeName + '</strong></td>' +
+                    '<td class="proc-user col-user">' + safeUser + '</td>' +
+                    '<td><div class="proc-metric-cell">' +
+                        '<div class="proc-bar-bg"><div class="proc-bar-fill cpu-fill" style="width: ' + cpuBar + '%;"></div></div>' +
+                        '<span class="proc-cpu-val">' + cpuNum.toFixed(1) + '%</span>' +
+                    '</div></td>' +
+                    '<td><div class="proc-metric-cell">' +
+                        '<div class="proc-bar-bg"><div class="proc-bar-fill mem-fill" style="width: ' + memBar + '%;"></div></div>' +
+                        '<span class="proc-mem-val">' + memNum.toFixed(1) + '%</span>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        const btnSortCpu = document.getElementById('btnSortCpu');
+        const btnSortMem = document.getElementById('btnSortMem');
+        if (btnSortCpu && btnSortMem) {
+            btnSortCpu.addEventListener('click', () => {
+                currentProcSort = 'cpu';
+                btnSortCpu.classList.add('active');
+                btnSortMem.classList.remove('active');
+                renderProcessTable();
+            });
+            btnSortMem.addEventListener('click', () => {
+                currentProcSort = 'mem';
+                btnSortMem.classList.add('active');
+                btnSortCpu.classList.remove('active');
+                renderProcessTable();
+            });
         }
 
         async function fetchNodeList() {
@@ -1153,6 +1442,16 @@ function renderDashboardPage() {
                 document.getElementById('diskBar').style.width = Math.min(100, Math.max(0, usedPercent)).toFixed(1) + '%';
                 document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
+
+                // 6. Top 10 Heavy Processes
+                const procSub = document.getElementById('procNodeSubtitle');
+                if (procSub) {
+                    procSub.innerText = 'Node: ' + (nodeInfo.name || activeNodeId);
+                }
+                if (stats.processes) {
+                    currentProcesses = stats.processes;
+                    renderProcessTable();
+                }
 
             } catch (e) {
                 console.error("Telemetry fetch error:", e);

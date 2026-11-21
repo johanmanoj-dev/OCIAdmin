@@ -130,6 +130,10 @@ while true; do
     LAST_NET_TX=$CURR_NET_TX
     LAST_NET_TIME=$CURR_NET_TIME
 
+    # Top 10 heavy processes by CPU and Memory
+    PROCS_CPU=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu 2>/dev/null | head -n 11 | awk 'NR>1 {printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (NR>2?",":""), $1, $2, $3, $4, $5}')
+    PROCS_MEM=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%mem 2>/dev/null | head -n 11 | awk 'NR>1 {printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (NR>2?",":""), $1, $2, $3, $4, $5}')
+
     JSON_DATA=$(cat << JSON
 {
   "nodeId": "$NODE_ID",
@@ -148,7 +152,11 @@ while true; do
   "rxSec": $RX_SEC,
   "txSec": $TX_SEC,
   "rxTotal": $CURR_NET_RX,
-  "txTotal": $CURR_NET_TX
+  "txTotal": $CURR_NET_TX,
+  "processes": {
+    "byCpu": [ $PROCS_CPU ],
+    "byMem": [ $PROCS_MEM ]
+  }
 }
 JSON
 )

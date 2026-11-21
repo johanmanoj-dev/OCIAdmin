@@ -99,7 +99,8 @@ function recordRemoteTelemetry(payload, clientIp = '') {
             rxRateStr: payload.rxRateStr || formatSpeed(rxNum),
             txRateStr: payload.txRateStr || formatSpeed(txNum),
             rxTotalStr: payload.rxTotalStr || formatBytes(rxTotal),
-            txTotalStr: payload.txTotalStr || formatBytes(txTotal)
+            txTotalStr: payload.txTotalStr || formatBytes(txTotal),
+            processes: payload.processes || { byCpu: [], byMem: [] }
         };
 
         // Maintain in-memory time-series history
