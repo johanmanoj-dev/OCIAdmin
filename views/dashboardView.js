@@ -319,11 +319,30 @@ function renderDashboardPage() {
             font-variant-numeric: tabular-nums;
         }
 
+        /* 2-Column Grid for Dual Network Graphs */
+        .network-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .network-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Grid Row for System Items */
         .system-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 14px;
+        }
+
+        @media (max-width: 580px) {
+            .system-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .grid-card {
@@ -663,6 +682,85 @@ function renderDashboardPage() {
             </div>
         </section>
 
+        <!-- Network Dual Telemetry Panels (Clean Visible Graphs) -->
+        <div class="network-grid">
+            <!-- Download (RX) Panel -->
+            <section class="telemetry-card">
+                <div class="card-header-row">
+                    <div class="metric-label-group">
+                        <span class="metric-title" style="color: #38bdf8;">Inbound Bandwidth &bull; Download (RX)</span>
+                        <div class="metric-headline">
+                            <span class="metric-big-num" id="rxRateVal" style="color: #38bdf8;">0 B/s</span>
+                            <span class="metric-sub-num" id="rxPeakSub">Peak: 0 B/s</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="metric-sub-num">Total Recv: <strong id="rxTotalMeta" style="color: #ffffff;">--</strong></span>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <svg id="rxSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="rxGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.30" />
+                                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="25" x2="500" y2="25" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="75" x2="500" y2="75" stroke="#121212" stroke-width="1" />
+                        <path id="rxArea" fill="url(#rxGrad)" d="" />
+                        <path id="rxLine" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
+                        <circle id="rxDot" cx="-10" cy="-10" r="3.5" fill="#38bdf8" />
+                    </svg>
+                </div>
+                <div class="chart-footer">
+                    <span>-95s</span>
+                    <span id="rxScaleMeta">Auto-scaled</span>
+                    <span>Now (Live RX)</span>
+                </div>
+            </section>
+
+            <!-- Upload (TX) Panel -->
+            <section class="telemetry-card">
+                <div class="card-header-row">
+                    <div class="metric-label-group">
+                        <span class="metric-title" style="color: #c084fc;">Outbound Bandwidth &bull; Upload (TX)</span>
+                        <div class="metric-headline">
+                            <span class="metric-big-num" id="txRateVal" style="color: #c084fc;">0 B/s</span>
+                            <span class="metric-sub-num" id="txPeakSub">Peak: 0 B/s</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="metric-sub-num">Total Sent: <strong id="txTotalMeta" style="color: #ffffff;">--</strong></span>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <svg id="txSvg" class="chart-svg" viewBox="0 0 500 100" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="txGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#c084fc" stop-opacity="0.30" />
+                                <stop offset="100%" stop-color="#c084fc" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="25" x2="500" y2="25" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="50" x2="500" y2="50" stroke="#121212" stroke-width="1" />
+                        <line x1="0" y1="75" x2="500" y2="75" stroke="#121212" stroke-width="1" />
+                        <path id="txArea" fill="url(#txGrad)" d="" />
+                        <path id="txLine" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="" />
+                        <circle id="txDot" cx="-10" cy="-10" r="3.5" fill="#c084fc" />
+                    </svg>
+                </div>
+                <div class="chart-footer">
+                    <span>-95s</span>
+                    <span id="txScaleMeta">Auto-scaled</span>
+                    <span>Now (Live TX)</span>
+                </div>
+            </section>
+        </div>
+
         <!-- System Vitals 2-Card Row -->
         <div class="system-grid">
             <!-- Database Service -->
@@ -697,31 +795,6 @@ function renderDashboardPage() {
                 <div class="grid-card-meta">
                     <span>Used: <strong id="diskUsedMeta" style="color: #ffffff;">-- GB</strong></span>
                     <span>Remaining: <strong id="diskFreeMeta" style="color: #4ade80;">-- GB</strong></span>
-                </div>
-            </section>
-
-            <!-- Network Throughput Card -->
-            <section class="grid-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="grid-card-title">Network Throughput (I/O)</span>
-                    <span id="netTotalMeta" style="font-size: 11px; font-weight: 600; color: #a1a1aa; font-variant-numeric: tabular-nums;">--</span>
-                </div>
-                <div class="grid-card-value" style="display: flex; align-items: baseline; justify-content: space-between;">
-                    <div>
-                        <span style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-right: 3px;">↓ RX</span>
-                        <strong id="rxRateVal" style="font-size: 17px; color: #ffffff;">0 B/s</strong>
-                    </div>
-                    <div>
-                        <span style="font-size: 11px; color: #c084fc; font-weight: 600; margin-right: 3px;">↑ TX</span>
-                        <strong id="txRateVal" style="font-size: 17px; color: #ffffff;">0 B/s</strong>
-                    </div>
-                </div>
-                <div class="progress-bar-thin">
-                    <div class="progress-fill-thin" id="netBar" style="background: linear-gradient(90deg, #38bdf8, #c084fc); width: 0%;"></div>
-                </div>
-                <div class="grid-card-meta">
-                    <span>Recv: <strong id="rxTotalMeta" style="color: #38bdf8;">--</strong></span>
-                    <span>Sent: <strong id="txTotalMeta" style="color: #c084fc;">--</strong></span>
                 </div>
             </section>
         </div>
@@ -775,8 +848,16 @@ function renderDashboardPage() {
 
         // In-memory histories mapped by nodeId
         const nodeHistories = {
-            local: { mem: [], cpu: [] }
+            local: { mem: [], cpu: [], netRx: [], netTx: [] }
         };
+
+        function formatSpeed(bytesPerSec) {
+            const n = parseFloat(bytesPerSec) || 0;
+            if (n <= 0) return '0 B/s';
+            if (n < 1024) return n.toFixed(0) + ' B/s';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB/s';
+            return (n / (1024 * 1024)).toFixed(1) + ' MB/s';
+        }
 
         function renderTimeSeries(values, lineElId, areaElId, dotElId, maxScale = 100) {
             const lineEl = document.getElementById(lineElId);
@@ -879,19 +960,30 @@ function renderDashboardPage() {
 
                 // Manage history
                 if (!nodeHistories[activeNodeId]) {
-                    nodeHistories[activeNodeId] = { mem: [], cpu: [] };
+                    nodeHistories[activeNodeId] = { mem: [], cpu: [], netRx: [], netTx: [] };
                 }
+
+                const rxSec = parseInt(stats.rxSec, 10) || 0;
+                const txSec = parseInt(stats.txSec, 10) || 0;
 
                 // If remote node sent history from backend, use it
                 if (data.history && data.history.mem && data.history.mem.length > 0) {
                     nodeHistories[activeNodeId].mem = data.history.mem;
                     nodeHistories[activeNodeId].cpu = data.history.cpu;
+                    if (data.history.netRx && data.history.netRx.length > 0) nodeHistories[activeNodeId].netRx = data.history.netRx;
+                    if (data.history.netTx && data.history.netTx.length > 0) nodeHistories[activeNodeId].netTx = data.history.netTx;
                 } else {
                     nodeHistories[activeNodeId].mem.push(memNum);
                     if (nodeHistories[activeNodeId].mem.length > MAX_TICKS) nodeHistories[activeNodeId].mem.shift();
 
                     nodeHistories[activeNodeId].cpu.push(cpuNum);
                     if (nodeHistories[activeNodeId].cpu.length > MAX_TICKS) nodeHistories[activeNodeId].cpu.shift();
+
+                    nodeHistories[activeNodeId].netRx.push(rxSec);
+                    if (nodeHistories[activeNodeId].netRx.length > MAX_TICKS) nodeHistories[activeNodeId].netRx.shift();
+
+                    nodeHistories[activeNodeId].netTx.push(txSec);
+                    if (nodeHistories[activeNodeId].netTx.length > MAX_TICKS) nodeHistories[activeNodeId].netTx.shift();
                 }
 
                 // 1. Memory Panel
@@ -914,7 +1006,34 @@ function renderDashboardPage() {
                 const cpuMax = Math.max(10, Math.ceil(Math.max(...(nodeHistories[activeNodeId].cpu || [5]), 5) / 10) * 10);
                 renderTimeSeries(nodeHistories[activeNodeId].cpu, 'cpuLine', 'cpuArea', 'cpuDot', cpuMax);
 
-                // 3. PostgreSQL / Services
+                // 3. Network Dual Graphs (Download RX & Upload TX)
+                const rxRate = stats.rxRateStr || '0 B/s';
+                const txRate = stats.txRateStr || '0 B/s';
+                const rxTotal = stats.rxTotalStr || '--';
+                const txTotal = stats.txTotalStr || '--';
+
+                document.getElementById('rxRateVal').innerText = rxRate;
+                document.getElementById('txRateVal').innerText = txRate;
+                document.getElementById('rxTotalMeta').innerText = rxTotal;
+                document.getElementById('txTotalMeta').innerText = txTotal;
+
+                // Autoscaling and Peak calculation for RX
+                const rxVals = nodeHistories[activeNodeId].netRx || [];
+                const maxRxVal = Math.max(...rxVals, rxSec, 1024);
+                const rxScale = Math.ceil(maxRxVal * 1.25);
+                document.getElementById('rxScaleMeta').innerText = 'Scale: 0 - ' + formatSpeed(rxScale);
+                document.getElementById('rxPeakSub').innerText = 'Peak: ' + formatSpeed(Math.max(...rxVals, rxSec));
+                renderTimeSeries(rxVals, 'rxLine', 'rxArea', 'rxDot', rxScale);
+
+                // Autoscaling and Peak calculation for TX
+                const txVals = nodeHistories[activeNodeId].netTx || [];
+                const maxTxVal = Math.max(...txVals, txSec, 1024);
+                const txScale = Math.ceil(maxTxVal * 1.25);
+                document.getElementById('txScaleMeta').innerText = 'Scale: 0 - ' + formatSpeed(txScale);
+                document.getElementById('txPeakSub').innerText = 'Peak: ' + formatSpeed(Math.max(...txVals, txSec));
+                renderTimeSeries(txVals, 'txLine', 'txArea', 'txDot', txScale);
+
+                // 4. Database Service / Gateway
                 const pgDot = document.getElementById('pgDot');
                 const pgVal = document.getElementById('pgVal');
                 const pgTitle = document.getElementById('pgCardTitle');
@@ -943,7 +1062,7 @@ function renderDashboardPage() {
                     pgVal.innerText = nodeInfo.isOnline ? 'Online & Reporting' : 'Beacon Stalled';
                 }
 
-                // 4. Storage Card
+                // 5. Storage Card
                 const totalGB = parseFloat(stats.diskTotalGB) || 0;
                 const usedGB = parseFloat(stats.diskUsedGB) || 0;
                 const freeGB = parseFloat(stats.diskFreeGB) || 0;
@@ -957,24 +1076,6 @@ function renderDashboardPage() {
                 document.getElementById('diskBar').style.width = Math.min(100, Math.max(0, usedPercent)).toFixed(1) + '%';
                 document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
-
-                // 5. Network Throughput Card
-                const rxRate = stats.rxRateStr || '0 B/s';
-                const txRate = stats.txRateStr || '0 B/s';
-                const rxTotal = stats.rxTotalStr || '--';
-                const txTotal = stats.txTotalStr || '--';
-                const rxSec = parseInt(stats.rxSec, 10) || 0;
-                const txSec = parseInt(stats.txSec, 10) || 0;
-
-                document.getElementById('rxRateVal').innerText = rxRate;
-                document.getElementById('txRateVal').innerText = txRate;
-                document.getElementById('rxTotalMeta').innerText = rxTotal;
-                document.getElementById('txTotalMeta').innerText = txTotal;
-                document.getElementById('netTotalMeta').innerText = 'In: ' + rxTotal + ' • Out: ' + txTotal;
-
-                const totalNetSec = rxSec + txSec;
-                const netPct = totalNetSec > 0 ? Math.min(100, Math.max(3, Math.round((totalNetSec / (5 * 1024 * 1024)) * 100))) : 0;
-                document.getElementById('netBar').style.width = netPct + '%';
 
             } catch (e) {
                 console.error("Telemetry fetch error:", e);

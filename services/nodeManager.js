@@ -108,6 +108,14 @@ function recordRemoteTelemetry(payload, clientIp = '') {
 
         existing.history.cpu.push(cpuNum);
         if (existing.history.cpu.length > MAX_HISTORY) existing.history.cpu.shift();
+
+        existing.history.netRx = existing.history.netRx || [];
+        existing.history.netTx = existing.history.netTx || [];
+        existing.history.netRx.push(rxNum);
+        if (existing.history.netRx.length > MAX_HISTORY) existing.history.netRx.shift();
+
+        existing.history.netTx.push(txNum);
+        if (existing.history.netTx.length > MAX_HISTORY) existing.history.netTx.shift();
     }
 
     remoteNodes.set(nodeId, existing);
