@@ -90,7 +90,14 @@ async function getNetworkMetrics() {
 async function getTopProcesses() {
     try {
         const proc = await si.processes();
-        const valid = (proc.list || []).filter(p => p.pid > 0 && p.name !== 'System Idle Process');
+        const valid = (proc.list || []).filter(p => {
+            if (!p || p.pid <= 0 || p.name === 'System Idle Process') return false;
+            // Exclude transient child processes spawned by this telemetry node process (Observer Effect)
+            if (p.parentPid === process.pid) return false;
+            // Exclude transient shell invocation commands spawned for metric sampling
+            if ((p.name === 'sh' || p.name === 'bash') && p.params && (p.params.includes('ps -axo') || p.params.includes('/proc/stat') || p.params.includes('df -'))) return false;
+            return true;
+        });
         return {
             byCpu: [...valid].sort((a, b) => b.cpu - a.cpu).slice(0, 10).map(p => ({
                 pid: p.pid,
@@ -111,20 +118,21 @@ async function getTopProcesses() {
         // Fast Linux ps fallback if systeminformation encounters an issue
         if (process.platform === 'linux') {
             try {
-                const raw = execSync('ps -eo pid,user,%cpu,%mem,comm', { timeout: 1500, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+                const raw = execSync('ps -eo pid,ppid,user,%cpu,%mem,comm', { timeout: 1500, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
                 const lines = raw.trim().split('\n');
                 const list = [];
                 for (let i = 1; i < lines.length; i++) {
                     const parts = lines[i].trim().split(/\s+/);
-                    if (parts.length >= 5) {
+                    if (parts.length >= 6) {
                         const pid = parseInt(parts[0], 10);
-                        if (pid <= 0) continue;
+                        const ppid = parseInt(parts[1], 10);
+                        if (pid <= 0 || ppid === process.pid) continue;
                         list.push({
                             pid,
-                            user: parts[1] || 'root',
-                            cpu: parseFloat(parts[2]) || 0,
-                            mem: parseFloat(parts[3]) || 0,
-                            name: parts.slice(4).join(' ') || 'unknown'
+                            user: parts[2] || 'root',
+                            cpu: parseFloat(parts[3]) || 0,
+                            mem: parseFloat(parts[4]) || 0,
+                            name: parts.slice(5).join(' ') || 'unknown'
                         });
                     }
                 }
