@@ -79,31 +79,6 @@ function renderDashboardPage() {
             align-items: center;
             gap: 12px;
         }
-
-        .live-badge {
-            font-size: 11px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background-color: #052e16;
-            border: 1px solid #14532d;
-            color: #4ade80;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #22c55e;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #22c55e;
-            animation: pulse 2s infinite ease-in-out;
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.85); }
