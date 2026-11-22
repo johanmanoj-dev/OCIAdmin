@@ -810,15 +810,8 @@ function renderDashboardPage() {
                 <img class="brand-logo-small" src="/logo.png" alt="Logo" />
                 <div>
                     <h1 class="brand-text-title">OCI Telemetry Console</h1>
-                    <div class="brand-text-sub" id="activeNodeSub">Active Node: ARM Primary &bull; 130.210.115.179</div>
+                    <div class="brand-text-sub" id="activeNodeSub">Active Node: Xeops-BuyZen &bull; 130.210.115.179</div>
                 </div>
-            </div>
-            <div class="header-actions">
-                <span class="live-badge">
-                    <span class="live-dot"></span>
-                    Live 3s (On-Demand)
-                </span>
-                <a href="/logout" class="logout-btn">Sign Out</a>
             </div>
         </header>
 
@@ -827,7 +820,7 @@ function renderDashboardPage() {
             <div class="node-pills-list" id="nodePillsList">
                 <button class="node-pill active" data-node="local" type="button">
                     <span class="node-status-dot"></span>
-                    <span>ARM Primary</span>
+                    <span>Xeops-BuyZen</span>
                 </button>
             </div>
             <button class="btn-connect-node" id="btnOpenConnectModal" type="button">
