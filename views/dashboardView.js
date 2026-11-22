@@ -813,6 +813,9 @@ function renderDashboardPage() {
                     <div class="brand-text-sub" id="activeNodeSub">Active Node: Xeops-BuyZen &bull; 130.210.115.179</div>
                 </div>
             </div>
+            <div class="header-actions">
+                <a href="/logout" class="logout-btn">Sign Out</a>
+            </div>
         </header>
 
         <!-- Multi-Node Switcher Bar -->
