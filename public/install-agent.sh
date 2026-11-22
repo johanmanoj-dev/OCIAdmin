@@ -130,9 +130,9 @@ while true; do
     LAST_NET_TX=$CURR_NET_TX
     LAST_NET_TIME=$CURR_NET_TIME
 
-    # Top 10 heavy processes by CPU and Memory
-    PROCS_CPU=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu 2>/dev/null | head -n 11 | awk 'NR>1 {printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (NR>2?",":""), $1, $2, $3, $4, $5}')
-    PROCS_MEM=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%mem 2>/dev/null | head -n 11 | awk 'NR>1 {printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (NR>2?",":""), $1, $2, $3, $4, $5}')
+    # Top 10 heavy processes by CPU and Memory (excluding measurement subshells and probes)
+    PROCS_CPU=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu 2>/dev/null | awk 'NR>1 && $5 !~ /^(ps|head|awk|grep|sh|bash)$/ { if (c++ < 10) printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (c>1?",":""), $1, $2, $3, $4, $5 }')
+    PROCS_MEM=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%mem 2>/dev/null | awk 'NR>1 && $5 !~ /^(ps|head|awk|grep|sh|bash)$/ { if (c++ < 10) printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (c>1?",":""), $1, $2, $3, $4, $5 }')
 
     JSON_DATA=$(cat << JSON
 {
