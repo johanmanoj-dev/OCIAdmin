@@ -457,6 +457,197 @@ function renderDashboardPage() {
             transition: width 400ms ease;
         }
 
+        /* Dev Stack & Service Health Grid */
+        .devstack-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .devstack-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #a1a1aa;
+            background: #0a0a0a;
+            border: 1px solid #1f1f1f;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .devstack-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        @media (max-width: 380px) {
+            .devstack-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 580px) and (max-width: 959px) {
+            .devstack-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (min-width: 960px) {
+            .devstack-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 12px;
+            }
+        }
+
+        .devstack-item {
+            background-color: #020202;
+            border: 1px solid #141414;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 84px;
+            gap: 10px;
+            transition: all 180ms ease;
+        }
+
+        .devstack-item:hover {
+            border-color: #262626;
+            background-color: #060606;
+            transform: translateY(-1px);
+        }
+
+        .devstack-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .devstack-tool-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .devstack-tool-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .devstack-tool-type {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .devstack-icon-wrapper {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background-color: #090909;
+            border: 1px solid #181818;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a1a1aa;
+            flex-shrink: 0;
+            transition: color 150ms ease, border-color 150ms ease;
+        }
+
+        .devstack-item:hover .devstack-icon-wrapper {
+            color: #ffffff;
+            border-color: #27272a;
+        }
+
+        .devstack-item-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .devstack-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .devstack-badge-active {
+            background-color: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.22);
+            color: #4ade80;
+        }
+
+        .devstack-badge-inactive {
+            background-color: rgba(234, 179, 8, 0.08);
+            border: 1px solid rgba(234, 179, 8, 0.22);
+            color: #facc15;
+        }
+
+        .devstack-badge-failed {
+            background-color: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.22);
+            color: #f87171;
+        }
+
+        .devstack-badge-none {
+            background-color: #070707;
+            border: 1px solid #191919;
+            color: #52525b;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .dot-active {
+            background-color: #22c55e;
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        .dot-inactive {
+            background-color: #eab308;
+            box-shadow: 0 0 5px #eab308;
+        }
+
+        .dot-failed {
+            background-color: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+        }
+
+        .dot-none {
+            border: 1.5px solid #52525b;
+            background-color: transparent;
+        }
+
         /* Top Heavy Processes Inspector */
         .process-card {
             display: flex;
@@ -1036,6 +1227,26 @@ function renderDashboardPage() {
             </section>
         </div>
 
+        <!-- Dev Stack & Service Health Grid -->
+        <section class="telemetry-card devstack-card">
+            <div class="card-header-row" style="margin-bottom: 4px;">
+                <div class="metric-label-group">
+                    <span class="metric-title" style="color: #a1a1aa;">Dev Stack &bull; Toolchain & Daemons</span>
+                    <div class="metric-headline" style="align-items: center;">
+                        <span class="process-card-title">Services & Runtimes</span>
+                        <span class="process-card-sub" id="devStackNodeSubtitle">Node Inspector</span>
+                    </div>
+                </div>
+                <div>
+                    <span id="devStackSummaryPill" class="devstack-summary-pill">Scanning...</span>
+                </div>
+            </div>
+
+            <div class="devstack-grid" id="devStackGrid">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
         <!-- Top 10 Heavy Processes Panel -->
         <section class="telemetry-card process-card">
             <div class="card-header-row" style="margin-bottom: 8px;">
@@ -1217,6 +1428,83 @@ function renderDashboardPage() {
             }).join('');
 
             tbody.innerHTML = rowsHtml;
+        }
+
+        const DEV_ICONS = {
+            nginx: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+            postgresql: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+            redis: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+            docker: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+            pm2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+            fail2ban: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+            ufw: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+            node: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+            python3: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+            git: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>'
+        };
+
+        function renderDevStackGrid(devStack) {
+            const grid = document.getElementById('devStackGrid');
+            const summaryPill = document.getElementById('devStackSummaryPill');
+            if (!grid) return;
+
+            if (!Array.isArray(devStack) || devStack.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #52525b; padding: 24px 0; font-size: 12px;">No toolchain telemetry available</div>';
+                if (summaryPill) summaryPill.innerText = 'No Data';
+                return;
+            }
+
+            let activeCount = 0;
+            let installedCount = 0;
+
+            const cardsHtml = devStack.map(item => {
+                const icon = DEV_ICONS[item.key] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+                let badgeClass = 'devstack-badge-none';
+                let dotClass = 'dot-none';
+                let statusLabel = 'Not Installed';
+
+                if (item.status === 'active') {
+                    activeCount++;
+                    installedCount++;
+                    badgeClass = 'devstack-badge-active';
+                    dotClass = 'dot-active';
+                    statusLabel = item.version ? 'Active (' + (item.version.startsWith('v') ? item.version : 'v' + item.version) + ')' : 'Active';
+                } else if (item.status === 'inactive') {
+                    installedCount++;
+                    badgeClass = 'devstack-badge-inactive';
+                    dotClass = 'dot-inactive';
+                    statusLabel = item.version ? 'Stopped (' + (item.version.startsWith('v') ? item.version : 'v' + item.version) + ')' : 'Stopped';
+                } else if (item.status === 'failed') {
+                    installedCount++;
+                    badgeClass = 'devstack-badge-failed';
+                    dotClass = 'dot-failed';
+                    statusLabel = 'Failed';
+                }
+
+                const safeName = (item.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeType = (item.type || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+                return '<div class="devstack-item">' +
+                    '<div class="devstack-item-top">' +
+                        '<div class="devstack-tool-info">' +
+                            '<span class="devstack-tool-name">' + safeName + '</span>' +
+                            '<span class="devstack-tool-type">' + safeType + '</span>' +
+                        '</div>' +
+                        '<div class="devstack-icon-wrapper">' + icon + '</div>' +
+                    '</div>' +
+                    '<div class="devstack-item-bottom">' +
+                        '<span class="devstack-badge ' + badgeClass + '">' +
+                            '<span class="badge-dot ' + dotClass + '"></span>' +
+                            '<span>' + statusLabel + '</span>' +
+                        '</span>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            grid.innerHTML = cardsHtml;
+            if (summaryPill) {
+                summaryPill.innerText = activeCount + ' Active • ' + (devStack.length - installedCount) + ' Not Installed';
+            }
         }
 
         const btnSortCpu = document.getElementById('btnSortCpu');
@@ -1414,7 +1702,14 @@ function renderDashboardPage() {
                 document.getElementById('diskUsedMeta').innerText = usedGB.toFixed(1) + ' GB';
                 document.getElementById('diskFreeMeta').innerText = freeGB.toFixed(1) + ' GB (' + freePercent.toFixed(1) + '%)';
 
-                // 6. Top 10 Heavy Processes
+                // 6. Dev Stack & Service Health Grid
+                const devSub = document.getElementById('devStackNodeSubtitle');
+                if (devSub) {
+                    devSub.innerText = 'Node: ' + (nodeInfo.name || activeNodeId);
+                }
+                renderDevStackGrid(stats.devStack);
+
+                // 7. Top 10 Heavy Processes
                 const procSub = document.getElementById('procNodeSubtitle');
                 if (procSub) {
                     procSub.innerText = 'Node: ' + (nodeInfo.name || activeNodeId);

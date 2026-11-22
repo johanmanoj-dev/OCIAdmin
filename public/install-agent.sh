@@ -68,6 +68,106 @@ SLEEP_INTERVAL=10
 LAST_NET_RX=0
 LAST_NET_TX=0
 LAST_NET_TIME=0
+DEV_STACK_TICKS=0
+CACHED_DEV_STACK="[]"
+
+probe_dev_stack() {
+  local items=()
+
+  check_svc() {
+    local key="$1" name="$2" type="$3" svc="$4" bin="$5" ver_cmd="$6"
+    local status="not_installed" ver=""
+    if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files "${svc}.service" --no-legend 2>/dev/null | grep -q "${svc}"; then
+      local act
+      act=$(systemctl is-active "$svc" 2>/dev/null || echo "inactive")
+      if [ "$act" = "active" ]; then status="active"; elif [ "$act" = "failed" ]; then status="failed"; else status="inactive"; fi
+    elif command -v "$bin" >/dev/null 2>&1; then
+      status="inactive"
+    fi
+    if [ "$status" != "not_installed" ] && [ -n "$ver_cmd" ]; then
+      ver=$(eval "$ver_cmd" 2>/dev/null | head -n 1 | tr -d '\r\n"')
+    fi
+    printf '{"key":"%s","name":"%s","type":"%s","status":"%s","version":"%s"}' "$key" "$name" "$type" "$status" "$ver"
+  }
+
+  check_cli() {
+    local key="$1" name="$2" type="$3" bin="$4" ver_cmd="$5"
+    local status="not_installed" ver=""
+    if command -v "$bin" >/dev/null 2>&1; then
+      status="active"
+      if [ -n "$ver_cmd" ]; then
+        ver=$(eval "$ver_cmd" 2>/dev/null | head -n 1 | tr -d '\r\n"')
+      fi
+    fi
+    printf '{"key":"%s","name":"%s","type":"%s","status":"%s","version":"%s"}' "$key" "$name" "$type" "$status" "$ver"
+  }
+
+  check_pm2() {
+    local status="not_installed" ver=""
+    if command -v pm2 >/dev/null 2>&1; then
+      if pm2 ping 2>/dev/null | grep -q pong || pgrep -f "PM2" >/dev/null 2>&1; then
+        status="active"
+      else
+        status="inactive"
+      fi
+      ver=$(pm2 -v 2>/dev/null | tail -n 1 | tr -d '\r\n ')
+    fi
+    printf '{"key":"pm2","name":"PM2","type":"Process Manager","status":"%s","version":"%s"}' "$status" "$ver"
+  }
+
+  check_ufw() {
+    local status="not_installed" ver=""
+    if command -v ufw >/dev/null 2>&1; then
+      if ufw status 2>/dev/null | grep -q "Status: active"; then
+        status="active"
+      else
+        status="inactive"
+      fi
+      ver=$(ufw --version 2>/dev/null | head -n 1 | awk '{print $2}' | tr -d '\r\n')
+    fi
+    printf '{"key":"ufw","name":"UFW Firewall","type":"Host Firewall","status":"%s","version":"%s"}' "$status" "$ver"
+  }
+
+  check_redis() {
+    local status="not_installed" ver=""
+    local svc="redis"
+    if command -v systemctl >/dev/null 2>&1; then
+      if systemctl list-unit-files redis-server.service --no-legend 2>/dev/null | grep -q redis-server; then
+        svc="redis-server"
+      fi
+    fi
+    if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files "${svc}.service" --no-legend 2>/dev/null | grep -q "${svc}"; then
+      local act
+      act=$(systemctl is-active "$svc" 2>/dev/null || echo "inactive")
+      if [ "$act" = "active" ]; then status="active"; elif [ "$act" = "failed" ]; then status="failed"; else status="inactive"; fi
+    elif command -v redis-server >/dev/null 2>&1; then
+      status="inactive"
+    fi
+    if [ "$status" != "not_installed" ]; then
+      ver=$(redis-server -v 2>/dev/null | awk -F'v=' '{print $2}' | awk '{print $1}' | tr -d '\r\n')
+    fi
+    printf '{"key":"redis","name":"Redis","type":"In-Memory Cache","status":"%s","version":"%s"}' "$status" "$ver"
+  }
+
+  items+=("$(check_svc "nginx" "Nginx" "Web Server" "nginx" "nginx" "nginx -v 2>&1 | awk -F/ '{print \$2}' | awk '{print \$1}'")")
+  items+=("$(check_svc "postgresql" "PostgreSQL" "Database Engine" "postgresql" "psql" "psql -V 2>/dev/null | awk '{print \$3}'")")
+  items+=("$(check_redis)")
+  items+=("$(check_svc "docker" "Docker" "Container Engine" "docker" "docker" "docker -v 2>/dev/null | awk '{print \$3}' | tr -d ','")")
+  items+=("$(check_pm2)")
+  items+=("$(check_svc "fail2ban" "Fail2ban" "Intrusion Shield" "fail2ban" "fail2ban-client" "fail2ban-client -v 2>/dev/null | awk '{print \$2}'")")
+  items+=("$(check_ufw)")
+  items+=("$(check_cli "node" "Node.js" "JavaScript Runtime" "node" "node -v 2>/dev/null | tr -d v")")
+  items+=("$(check_cli "python3" "Python 3" "Language Runtime" "python3" "python3 --version 2>/dev/null | awk '{print \$2}'")")
+  items+=("$(check_cli "git" "Git" "Version Control" "git" "git --version 2>/dev/null | awk '{print \$3}'")")
+
+  local first=1
+  printf '['
+  for item in "${items[@]}"; do
+    if [ $first -eq 1 ]; then first=0; else printf ','; fi
+    printf '%s' "$item"
+  done
+  printf ']'
+}
 
 while true; do
   if [ "$IS_ACTIVE" = "true" ]; then
@@ -134,6 +234,13 @@ while true; do
     PROCS_CPU=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu 2>/dev/null | awk 'NR>1 && $5 !~ /^(ps|head|awk|grep|sh|bash)$/ { if (c++ < 10) printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (c>1?",":""), $1, $2, $3, $4, $5 }')
     PROCS_MEM=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%mem 2>/dev/null | awk 'NR>1 && $5 !~ /^(ps|head|awk|grep|sh|bash)$/ { if (c++ < 10) printf "%s{\"pid\":%d,\"user\":\"%s\",\"cpu\":%s,\"mem\":%s,\"name\":\"%s\"}", (c>1?",":""), $1, $2, $3, $4, $5 }')
 
+    # Query dev stack every 10 ticks (30s) or on initial startup
+    DEV_STACK_TICKS=$((DEV_STACK_TICKS + 1))
+    if [ "$DEV_STACK_TICKS" -ge 10 ] || [ "$CACHED_DEV_STACK" = "[]" ]; then
+      DEV_STACK_TICKS=0
+      CACHED_DEV_STACK=$(probe_dev_stack 2>/dev/null || echo "[]")
+    fi
+
     JSON_DATA=$(cat << JSON
 {
   "nodeId": "$NODE_ID",
@@ -156,7 +263,8 @@ while true; do
   "processes": {
     "byCpu": [ $PROCS_CPU ],
     "byMem": [ $PROCS_MEM ]
-  }
+  },
+  "devStack": $CACHED_DEV_STACK
 }
 JSON
 )

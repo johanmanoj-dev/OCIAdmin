@@ -148,13 +148,158 @@ async function getTopProcesses() {
     }
 }
 
+let cachedDevStack = null;
+let lastDevStackCheck = 0;
+const DEV_STACK_CACHE_TTL_MS = 30000; // 30s cache TTL to guarantee zero CPU overhead
+
+const DEFAULT_DEV_STACK = [
+    { key: 'nginx', name: 'Nginx', type: 'Web Server', status: 'not_installed', version: '' },
+    { key: 'postgresql', name: 'PostgreSQL', type: 'Database Engine', status: 'not_installed', version: '' },
+    { key: 'redis', name: 'Redis', type: 'In-Memory Cache', status: 'not_installed', version: '' },
+    { key: 'docker', name: 'Docker', type: 'Container Engine', status: 'not_installed', version: '' },
+    { key: 'pm2', name: 'PM2', type: 'Process Manager', status: 'not_installed', version: '' },
+    { key: 'fail2ban', name: 'Fail2ban', type: 'Intrusion Shield', status: 'not_installed', version: '' },
+    { key: 'ufw', name: 'UFW Firewall', type: 'Host Firewall', status: 'not_installed', version: '' },
+    { key: 'node', name: 'Node.js', type: 'JavaScript Runtime', status: 'not_installed', version: '' },
+    { key: 'python3', name: 'Python 3', type: 'Language Runtime', status: 'not_installed', version: '' },
+    { key: 'git', name: 'Git', type: 'Version Control', status: 'not_installed', version: '' }
+];
+
+async function getDevStackStatus() {
+    const now = Date.now();
+    if (cachedDevStack && (now - lastDevStackCheck) < DEV_STACK_CACHE_TTL_MS) {
+        return cachedDevStack;
+    }
+
+    if (process.platform !== 'linux') {
+        // Fallback for non-Linux / local development environment
+        cachedDevStack = DEFAULT_DEV_STACK.map(item => {
+            if (item.key === 'node') return { ...item, status: 'active', version: process.version.replace('v', '') };
+            return { ...item };
+        });
+        lastDevStackCheck = now;
+        return cachedDevStack;
+    }
+
+    try {
+        const script = `
+check_svc() {
+  local key="$1" name="$2" type="$3" svc="$4" bin="$5" ver_cmd="$6"
+  local status="not_installed" ver=""
+  if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files "\${svc}.service" --no-legend 2>/dev/null | grep -q "\${svc}"; then
+    local act
+    act=$(systemctl is-active "$svc" 2>/dev/null || echo "inactive")
+    if [ "$act" = "active" ]; then status="active"; elif [ "$act" = "failed" ]; then status="failed"; else status="inactive"; fi
+  elif command -v "$bin" >/dev/null 2>&1; then
+    status="inactive"
+  fi
+  if [ "$status" != "not_installed" ] && [ -n "$ver_cmd" ]; then
+    ver=$(eval "$ver_cmd" 2>/dev/null | head -n 1 | tr -d '\\r\\n"')
+  fi
+  printf '{"key":"%s","name":"%s","type":"%s","status":"%s","version":"%s"}' "$key" "$name" "$type" "$status" "$ver"
+}
+
+check_cli() {
+  local key="$1" name="$2" type="$3" bin="$4" ver_cmd="$5"
+  local status="not_installed" ver=""
+  if command -v "$bin" >/dev/null 2>&1; then
+    status="active"
+    if [ -n "$ver_cmd" ]; then
+      ver=$(eval "$ver_cmd" 2>/dev/null | head -n 1 | tr -d '\\r\\n"')
+    fi
+  fi
+  printf '{"key":"%s","name":"%s","type":"%s","status":"%s","version":"%s"}' "$key" "$name" "$type" "$status" "$ver"
+}
+
+check_pm2() {
+  local status="not_installed" ver=""
+  if command -v pm2 >/dev/null 2>&1; then
+    if pm2 ping 2>/dev/null | grep -q pong || pgrep -f "PM2" >/dev/null 2>&1; then
+      status="active"
+    else
+      status="inactive"
+    fi
+    ver=$(pm2 -v 2>/dev/null | tail -n 1 | tr -d '\\r\\n ')
+  fi
+  printf '{"key":"pm2","name":"PM2","type":"Process Manager","status":"%s","version":"%s"}' "$status" "$ver"
+}
+
+check_ufw() {
+  local status="not_installed" ver=""
+  if command -v ufw >/dev/null 2>&1; then
+    if ufw status 2>/dev/null | grep -q "Status: active"; then
+      status="active"
+    else
+      status="inactive"
+    fi
+    ver=$(ufw --version 2>/dev/null | head -n 1 | awk '{print $2}' | tr -d '\\r\\n')
+  fi
+  printf '{"key":"ufw","name":"UFW Firewall","type":"Host Firewall","status":"%s","version":"%s"}' "$status" "$ver"
+}
+
+check_redis() {
+  local status="not_installed" ver=""
+  local svc="redis"
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl list-unit-files redis-server.service --no-legend 2>/dev/null | grep -q redis-server; then
+      svc="redis-server"
+    fi
+  fi
+  if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files "\${svc}.service" --no-legend 2>/dev/null | grep -q "\${svc}"; then
+    local act
+    act=$(systemctl is-active "$svc" 2>/dev/null || echo "inactive")
+    if [ "$act" = "active" ]; then status="active"; elif [ "$act" = "failed" ]; then status="failed"; else status="inactive"; fi
+  elif command -v redis-server >/dev/null 2>&1; then
+    status="inactive"
+  fi
+  if [ "$status" != "not_installed" ]; then
+    ver=$(redis-server -v 2>/dev/null | awk -F'v=' '{print $2}' | awk '{print $1}' | tr -d '\\r\\n')
+  fi
+  printf '{"key":"redis","name":"Redis","type":"In-Memory Cache","status":"%s","version":"%s"}' "$status" "$ver"
+}
+
+ITEMS=()
+ITEMS+=("$(check_svc "nginx" "Nginx" "Web Server" "nginx" "nginx" "nginx -v 2>&1 | awk -F/ '{print \\$2}' | awk '{print \\$1}'")")
+ITEMS+=("$(check_svc "postgresql" "PostgreSQL" "Database Engine" "postgresql" "psql" "psql -V 2>/dev/null | awk '{print \\$3}'")")
+ITEMS+=("$(check_redis)")
+ITEMS+=("$(check_svc "docker" "Docker" "Container Engine" "docker" "docker" "docker -v 2>/dev/null | awk '{print \\$3}' | tr -d ','")")
+ITEMS+=("$(check_pm2)")
+ITEMS+=("$(check_svc "fail2ban" "Fail2ban" "Intrusion Shield" "fail2ban" "fail2ban-client" "fail2ban-client -v 2>/dev/null | awk '{print \\$2}'")")
+ITEMS+=("$(check_ufw)")
+ITEMS+=("$(check_cli "node" "Node.js" "JavaScript Runtime" "node" "node -v 2>/dev/null | tr -d v")")
+ITEMS+=("$(check_cli "python3" "Python 3" "Language Runtime" "python3" "python3 --version 2>/dev/null | awk '{print \\$2}'")")
+ITEMS+=("$(check_cli "git" "Git" "Version Control" "git" "git --version 2>/dev/null | awk '{print \\$3}'")")
+
+FIRST=1
+printf '['
+for item in "\${ITEMS[@]}"; do
+  if [ $FIRST -eq 1 ]; then FIRST=0; else printf ','; fi
+  printf '%s' "$item"
+done
+printf ']'
+`;
+        const out = execSync(script, { shell: '/bin/bash', timeout: 2500, encoding: 'utf8' }).trim();
+        const parsed = JSON.parse(out);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedDevStack = parsed;
+            lastDevStackCheck = now;
+            return cachedDevStack;
+        }
+    } catch {
+        // Fallback on error
+    }
+
+    return cachedDevStack || DEFAULT_DEV_STACK;
+}
+
 async function getSystemStats() {
-    const [mem, cpu, disk, net, processes] = await Promise.all([
+    const [mem, cpu, disk, net, processes, devStack] = await Promise.all([
         si.mem(),
         si.currentLoad(),
         si.fsSize(),
         getNetworkMetrics(),
-        getTopProcesses()
+        getTopProcesses(),
+        getDevStackStatus()
     ]);
     const time = si.time();
 
@@ -240,8 +385,9 @@ async function getSystemStats() {
         txRateStr: net.txRateStr,
         rxTotalStr: net.rxTotalStr,
         txTotalStr: net.txTotalStr,
-        processes
+        processes,
+        devStack
     };
 }
 
-module.exports = { getSystemStats };
+module.exports = { getSystemStats, getDevStackStatus };
