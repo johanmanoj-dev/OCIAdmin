@@ -70,6 +70,235 @@ LAST_NET_TX=0
 LAST_NET_TIME=0
 DEV_STACK_TICKS=0
 CACHED_DEV_STACK="[]"
+CONTAINERS_TICKS=0
+CACHED_CONTAINERS=""
+
+probe_docker_containers() {
+  if ! command -v docker >/dev/null 2>&1; then
+    printf '{"status":"not_installed","error":"","items":[]}'
+    return
+  fi
+
+  local ps_out rc
+  ps_out=$(docker ps -a --no-trunc --format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.State}}\t{{.Status}}\t{{.Ports}}' 2>&1)
+  rc=$?
+
+  if [ $rc -ne 0 ]; then
+    local lower_err
+    lower_err=$(printf '%s' "$ps_out" | tr '[:upper:]' '[:lower:]')
+    if printf '%s' "$lower_err" | grep -q 'permission denied'; then
+      printf '{"status":"permission_denied","error":"Permission denied accessing /var/run/docker.sock","items":[]}'
+    elif printf '%s' "$lower_err" | grep -qE 'cannot connect to the docker daemon|is the docker daemon running|error during connect'; then
+      printf '{"status":"inactive","error":"Docker daemon is not running","items":[]}'
+    else
+      local first_line
+      first_line=$(printf '%s' "$ps_out" | head -n 1 | tr -d '\r\n"' | cut -c1-180)
+      printf '{"status":"error","error":"%s","items":[]}' "$first_line"
+    fi
+    return
+  fi
+
+  if [ -z "$ps_out" ]; then
+    printf '{"status":"ok","error":"","items":[]}'
+    return
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    DOCKER_PS_OUT="$ps_out" python3 - << 'PYEOF' 2>/dev/null
+import json, os, re, subprocess
+
+ps_lines = [l for l in os.environ.get("DOCKER_PS_OUT", "").splitlines() if l.strip()]
+ps_map = {}
+ids = []
+for line in ps_lines:
+    parts = line.split("\t")
+    cid = parts[0] if len(parts) > 0 else ""
+    if not cid:
+        continue
+    ids.append(cid)
+    ps_map[cid] = {
+        "name": parts[1] if len(parts) > 1 else "",
+        "image": parts[2] if len(parts) > 2 else "",
+        "state": parts[3] if len(parts) > 3 else "",
+        "statusText": parts[4] if len(parts) > 4 else "",
+        "ports": parts[5] if len(parts) > 5 else "",
+    }
+
+def norm_ts(ts):
+    if not ts or not isinstance(ts, str) or ts.startswith("0001-01-01"):
+        return ""
+    return ts
+
+def tag_commit(img_ref):
+    if not img_ref:
+        return ""
+    no_digest = img_ref.split("@")[0]
+    tail = no_digest.rsplit("/", 1)[-1]
+    if ":" not in tail:
+        return ""
+    tag = tail.split(":", 1)[1].strip()
+    m = re.match(r"^(?:sha[-_]|git[-_])?([0-9a-f]{7,40})$", tag, re.I)
+    return m.group(1) if m else ""
+
+git_cache = {}
+def read_compose_git(work_dir):
+    if not work_dir:
+        return None
+    if work_dir in git_cache:
+        return git_cache[work_dir]
+    res = None
+    if os.path.isdir(work_dir):
+        try:
+            out = subprocess.check_output(
+                ["git", "-C", work_dir, "log", "-1", "--format=%H%n%h%n%s%n%D"],
+                stderr=subprocess.DEVNULL, timeout=1.5, text=True
+            ).strip().splitlines()
+            if out and out[0].strip():
+                dec = out[3] if len(out) > 3 else ""
+                m = re.search(r"HEAD\s*->\s*([^,]+)", dec)
+                branch = m.group(1).strip() if m else (dec.split(",")[0].strip().removeprefix("origin/") if dec else "")
+                res = {
+                    "commitFull": out[0].strip(),
+                    "commit": (out[1] if len(out) > 1 else out[0][:7]).strip(),
+                    "commitMessage": (out[2] if len(out) > 2 else "").strip(),
+                    "commitBranch": branch,
+                }
+        except Exception:
+            res = None
+    git_cache[work_dir] = res
+    return res
+
+try:
+    insp = json.loads(subprocess.check_output(["docker", "inspect", *ids], stderr=subprocess.DEVNULL, timeout=3, text=True))
+except Exception as e:
+    print(json.dumps({"status": "error", "error": str(e)[:180], "items": []}))
+    raise SystemExit(0)
+
+img_ids = list({r.get("Image") for r in insp if r.get("Image")})
+img_map = {}
+if img_ids:
+    try:
+        imgs = json.loads(subprocess.check_output(["docker", "image", "inspect", *img_ids], stderr=subprocess.DEVNULL, timeout=3, text=True))
+        for im in imgs:
+            if im.get("Id"):
+                img_map[im["Id"]] = im
+    except Exception:
+        pass
+
+items = []
+for rec in insp:
+    full_id = rec.get("Id", "")
+    ps_row = ps_map.get(full_id, {})
+    im = img_map.get(rec.get("Image", ""), {})
+    labels = {}
+    labels.update((im.get("Config") or {}).get("Labels") or {})
+    labels.update((rec.get("Config") or {}).get("Labels") or {})
+
+    image_name = (rec.get("Config") or {}).get("Image") or ps_row.get("image") or ""
+    state_obj = rec.get("State") or {}
+    health_obj = state_obj.get("Health") or {}
+    h_logs = health_obj.get("Log") or []
+    latest_log = h_logs[-1] if h_logs else None
+    h_output = ""
+    if latest_log:
+        out_txt = (latest_log.get("Output") or "").strip()[:400]
+        h_output = f"[Exit {latest_log.get('ExitCode', '')}] {out_txt}".strip()
+
+    commit_full = (
+        labels.get("org.opencontainers.image.revision")
+        or labels.get("org.label-schema.vcs-ref")
+        or labels.get("com.git.commit")
+        or labels.get("git.commit")
+        or labels.get("vcs-ref")
+        or ""
+    ).strip()
+    label_msg = (
+        labels.get("com.git.commit_message")
+        or labels.get("git.commit.message")
+        or labels.get("org.opencontainers.image.description")
+        or ""
+    ).strip()
+    label_branch = (
+        labels.get("org.opencontainers.image.ref.name")
+        or labels.get("com.git.branch")
+        or labels.get("git.branch")
+        or ""
+    ).strip()
+    repo_url = (
+        labels.get("org.opencontainers.image.source")
+        or labels.get("org.label-schema.vcs-url")
+        or ""
+    ).strip()
+
+    if commit_full:
+        commit_short, commit_src = commit_full[:7], "oci-label"
+    else:
+        t_commit = tag_commit(image_name)
+        if t_commit:
+            commit_full, commit_short, commit_src = t_commit, t_commit[:7], "image-tag"
+        else:
+            git_info = read_compose_git(labels.get("com.docker.compose.project.working_dir", ""))
+            if git_info:
+                commit_full = git_info["commitFull"]
+                commit_short = git_info["commit"]
+                label_msg = git_info["commitMessage"] or label_msg
+                label_branch = git_info["commitBranch"] or label_branch
+                commit_src = "compose-git"
+            else:
+                commit_full, commit_short, commit_src = "", "", "none"
+
+    items.append({
+        "id": full_id[:12],
+        "name": (rec.get("Name") or ps_row.get("name") or full_id[:12]).lstrip("/"),
+        "image": image_name,
+        "state": state_obj.get("Status") or ps_row.get("state") or "unknown",
+        "statusText": ps_row.get("statusText") or state_obj.get("Status") or "unknown",
+        "health": health_obj.get("Status") or "none",
+        "healthFailingStreak": int(health_obj.get("FailingStreak") or 0),
+        "healthLog": h_output,
+        "restartCount": int(rec.get("RestartCount") or 0),
+        "ports": ps_row.get("ports") or "",
+        "createdAt": norm_ts(rec.get("Created")),
+        "startedAt": norm_ts(state_obj.get("StartedAt")),
+        "rebuiltAt": norm_ts(im.get("Created") or labels.get("org.opencontainers.image.created") or rec.get("Created")),
+        "composeProject": (labels.get("com.docker.compose.project") or "").strip(),
+        "composeService": (labels.get("com.docker.compose.service") or "").strip(),
+        "commit": commit_short,
+        "commitFull": commit_full,
+        "commitMessage": label_msg,
+        "commitBranch": label_branch,
+        "commitSource": commit_src,
+        "repoUrl": repo_url,
+    })
+
+items.sort(key=lambda x: (0 if x["state"] == "running" else 1, x["name"]))
+print(json.dumps({"status": "ok", "error": "", "items": items}, separators=(",", ":")))
+PYEOF
+    return
+  fi
+
+  # Fallback without python3 using Docker's native Go template JSON formatter
+  local items="" first=1 cid cname cimg cstate cstatus cports row img_id rebuilt_at commit_full commit_short commit_src
+  while IFS=$'\t' read -r cid cname cimg cstate cstatus cports; do
+    [ -z "$cid" ] && continue
+    row=$(docker inspect --format '{"id":{{json (printf "%.12s" .Id)}},"name":{{json .Name}},"image":{{json .Config.Image}},"state":{{json .State.Status}},"health":{{if .State.Health}}{{json .State.Health.Status}}{{else}}"none"{{end}},"healthFailingStreak":{{if .State.Health}}{{.State.Health.FailingStreak}}{{else}}0{{end}},"restartCount":{{.RestartCount}},"createdAt":{{json .Created}},"startedAt":{{json .State.StartedAt}},"commitFull":{{if .Config.Labels}}{{json (index .Config.Labels "org.opencontainers.image.revision")}}{{else}}""{{end}},"commitMessage":{{if .Config.Labels}}{{json (index .Config.Labels "com.git.commit_message")}}{{else}}""{{end}},"commitBranch":{{if .Config.Labels}}{{json (index .Config.Labels "org.opencontainers.image.ref.name")}}{{else}}""{{end}},"repoUrl":{{if .Config.Labels}}{{json (index .Config.Labels "org.opencontainers.image.source")}}{{else}}""{{end}},"composeProject":{{if .Config.Labels}}{{json (index .Config.Labels "com.docker.compose.project")}}{{else}}""{{end}},"composeService":{{if .Config.Labels}}{{json (index .Config.Labels "com.docker.compose.service")}}{{else}}""{{end}}}' "$cid" 2>/dev/null)
+    [ -z "$row" ] && continue
+    img_id=$(docker inspect --format '{{.Image}}' "$cid" 2>/dev/null)
+    rebuilt_at=""
+    if [ -n "$img_id" ]; then
+      rebuilt_at=$(docker image inspect --format '{{.Created}}' "$img_id" 2>/dev/null || echo "")
+    fi
+    commit_full=$(docker inspect --format '{{if .Config.Labels}}{{index .Config.Labels "org.opencontainers.image.revision"}}{{end}}' "$cid" 2>/dev/null)
+    commit_short=$(printf '%s' "$commit_full" | cut -c1-7)
+    commit_src="none"
+    [ -n "$commit_short" ] && commit_src="oci-label"
+    row="${row%\}},\"statusText\":$(printf '%s' "$cstatus" | awk '{gsub(/\\/,"\\\\"); gsub(/"/,"\\\""); printf "\"%s\"", $0}'),\"ports\":$(printf '%s' "$cports" | awk '{gsub(/\\/,"\\\\"); gsub(/"/,"\\\""); printf "\"%s\"", $0}'),\"rebuiltAt\":\"$rebuilt_at\",\"healthLog\":\"\",\"commit\":\"$commit_short\",\"commitSource\":\"$commit_src\"}"
+    if [ $first -eq 1 ]; then first=0; else items="${items},"; fi
+    items="${items}${row}"
+  done <<< "$ps_out"
+
+  printf '{"status":"ok","error":"","items":[%s]}' "$items"
+}
 
 probe_dev_stack() {
   local items=()
@@ -241,6 +470,13 @@ while true; do
       CACHED_DEV_STACK=$(probe_dev_stack 2>/dev/null || echo "[]")
     fi
 
+    # Query Docker containers every 4 ticks (~12s) or on initial active tick
+    CONTAINERS_TICKS=$((CONTAINERS_TICKS + 1))
+    if [ "$CONTAINERS_TICKS" -ge 4 ] || [ -z "$CACHED_CONTAINERS" ]; then
+      CONTAINERS_TICKS=0
+      CACHED_CONTAINERS=$(probe_docker_containers 2>/dev/null || echo '{"status":"error","error":"Docker probe failed","items":[]}')
+    fi
+
     JSON_DATA=$(cat << JSON
 {
   "nodeId": "$NODE_ID",
@@ -264,7 +500,8 @@ while true; do
     "byCpu": [ $PROCS_CPU ],
     "byMem": [ $PROCS_MEM ]
   },
-  "devStack": $CACHED_DEV_STACK
+  "devStack": $CACHED_DEV_STACK,
+  "containers": $CACHED_CONTAINERS
 }
 JSON
 )

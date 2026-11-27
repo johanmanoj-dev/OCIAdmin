@@ -31,6 +31,53 @@ function isDashboardActive() {
     return (Date.now() - lastDashboardActivity) < VIEWER_TIMEOUT_MS;
 }
 
+function normalizeRemoteContainers(incoming, fallback) {
+    if (incoming && typeof incoming === 'object' && Array.isArray(incoming.items)) {
+        return {
+            status: String(incoming.status || 'ok'),
+            error: String(incoming.error || ''),
+            items: incoming.items.map(c => {
+                const commitFull = String(c.commitFull || c.commit || '').trim();
+                const commit = String(c.commit || (commitFull ? commitFull.slice(0, 7) : '')).trim();
+                const id = String(c.id || '').slice(0, 12);
+                const startedAt = (c.startedAt && !String(c.startedAt).startsWith('0001-01-01')) ? String(c.startedAt) : '';
+                const createdAt = (c.createdAt && !String(c.createdAt).startsWith('0001-01-01')) ? String(c.createdAt) : '';
+                const rebuiltAt = (c.rebuiltAt && !String(c.rebuiltAt).startsWith('0001-01-01')) ? String(c.rebuiltAt) : '';
+
+                return {
+                    id,
+                    name: String(c.name || id).replace(/^\/+/, ''),
+                    image: String(c.image || ''),
+                    state: String(c.state || 'unknown'),
+                    statusText: String(c.statusText || c.state || 'unknown'),
+                    health: String(c.health || 'none'),
+                    healthFailingStreak: Number(c.healthFailingStreak) || 0,
+                    healthLog: String(c.healthLog || ''),
+                    restartCount: Number(c.restartCount) || 0,
+                    ports: String(c.ports || ''),
+                    createdAt,
+                    startedAt,
+                    rebuiltAt,
+                    composeProject: String(c.composeProject || ''),
+                    composeService: String(c.composeService || ''),
+                    commit,
+                    commitFull,
+                    commitMessage: String(c.commitMessage || ''),
+                    commitBranch: String(c.commitBranch || ''),
+                    commitSource: String(c.commitSource || (commit ? 'oci-label' : 'none')),
+                    repoUrl: String(c.repoUrl || '')
+                };
+            })
+        };
+    }
+
+    if (fallback && typeof fallback === 'object' && Array.isArray(fallback.items)) {
+        return fallback;
+    }
+
+    return { status: 'unavailable', error: '', items: [] };
+}
+
 function recordRemoteTelemetry(payload, clientIp = '') {
     if (!payload || !payload.nodeId) {
         throw new Error('Invalid payload: nodeId is required');
@@ -103,7 +150,8 @@ function recordRemoteTelemetry(payload, clientIp = '') {
             processes: payload.processes || { byCpu: [], byMem: [] },
             devStack: (Array.isArray(payload.devStack) && payload.devStack.length > 0)
                 ? payload.devStack
-                : (existing.stats && Array.isArray(existing.stats.devStack) ? existing.stats.devStack : [])
+                : (existing.stats && Array.isArray(existing.stats.devStack) ? existing.stats.devStack : []),
+            containers: normalizeRemoteContainers(payload.containers, existing.stats?.containers)
         };
 
         // Maintain in-memory time-series history

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const si = require('systeminformation');
 const { execSync } = require('child_process');
+const { getDockerContainers } = require('./dockerService');
 
 let prevNetSample = {
     time: 0,
@@ -293,13 +294,14 @@ printf ']'
 }
 
 async function getSystemStats() {
-    const [mem, cpu, disk, net, processes, devStack] = await Promise.all([
+    const [mem, cpu, disk, net, processes, devStack, containers] = await Promise.all([
         si.mem(),
         si.currentLoad(),
         si.fsSize(),
         getNetworkMetrics(),
         getTopProcesses(),
-        getDevStackStatus()
+        getDevStackStatus(),
+        getDockerContainers()
     ]);
     const time = si.time();
 
@@ -386,7 +388,8 @@ async function getSystemStats() {
         rxTotalStr: net.rxTotalStr,
         txTotalStr: net.txTotalStr,
         processes,
-        devStack
+        devStack,
+        containers
     };
 }
 

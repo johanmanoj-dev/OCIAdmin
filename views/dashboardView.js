@@ -648,6 +648,261 @@ function renderDashboardPage() {
             background-color: transparent;
         }
 
+        /* Docker Containers Section */
+        .docker-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .docker-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        @media (min-width: 580px) and (max-width: 959px) {
+            .docker-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+        }
+
+        @media (min-width: 960px) {
+            .docker-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
+            }
+        }
+
+        .container-item {
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            background-color: #020202;
+            border: 1px solid #141414;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 180ms ease;
+        }
+
+        .container-item:hover {
+            border-color: #2e2e2e;
+            background-color: #060606;
+            transform: translateY(-1px);
+        }
+
+        .container-item:focus-visible {
+            outline: 1px solid #ffffff;
+            outline-offset: 2px;
+        }
+
+        .container-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .container-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .container-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .container-image {
+            font-size: 11px;
+            color: #71717a;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .container-badges {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .devstack-badge-info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #38bdf8;
+        }
+
+        .dot-info {
+            background-color: #38bdf8;
+            box-shadow: 0 0 6px #38bdf8;
+        }
+
+        .container-meta-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #101010;
+            padding-top: 8px;
+            font-size: 11px;
+            color: #71717a;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .container-rebuild-meta {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .container-commit-chip {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+            background-color: #090909;
+            border: 1px solid #1e1e1e;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+
+        .container-commit-chip.muted {
+            color: #52525b;
+        }
+
+        .docker-empty-state {
+            grid-column: 1 / -1;
+            background-color: #020202;
+            border: 1px solid #141414;
+            border-radius: 10px;
+            padding: 22px 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #71717a;
+            line-height: 1.5;
+        }
+
+        .docker-empty-state.warn {
+            border-color: rgba(234, 179, 8, 0.28);
+            background-color: rgba(234, 179, 8, 0.04);
+            color: #facc15;
+        }
+
+        .docker-empty-state code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: #0a0a0a;
+            border: 1px solid #262626;
+            border-radius: 4px;
+            padding: 1px 6px;
+            color: #ffffff;
+        }
+
+        /* Container Details Popup Modal */
+        .container-modal-card {
+            max-width: 620px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .container-modal-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 520px) {
+            .detail-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .detail-box {
+            background-color: #020202;
+            border: 1px solid #161616;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .detail-box-full {
+            margin-bottom: 12px;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #71717a;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .detail-sub {
+            font-size: 11px;
+            color: #a1a1aa;
+            margin-top: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .commit-link {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+
+        .commit-link:hover {
+            text-decoration: underline;
+        }
+
+        .health-log-box {
+            background-color: #000000;
+            border: 1px solid #181818;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 11px;
+            color: #d4d4d8;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 130px;
+            overflow-y: auto;
+            line-height: 1.45;
+        }
+
         /* Top Heavy Processes Inspector */
         .process-card {
             display: flex;
@@ -1247,6 +1502,26 @@ function renderDashboardPage() {
             </div>
         </section>
 
+        <!-- Docker Containers Monitor -->
+        <section class="telemetry-card docker-card">
+            <div class="card-header-row" style="margin-bottom: 4px;">
+                <div class="metric-label-group">
+                    <span class="metric-title" style="color: #38bdf8;">Container Runtime &bull; Deployment &amp; Health</span>
+                    <div class="metric-headline" style="align-items: center;">
+                        <span class="process-card-title">Docker Containers</span>
+                        <span class="process-card-sub" id="dockerNodeSubtitle">Node Inspector</span>
+                    </div>
+                </div>
+                <div>
+                    <span id="dockerSummaryPill" class="devstack-summary-pill">Scanning...</span>
+                </div>
+            </div>
+
+            <div class="docker-grid" id="dockerGrid">
+                <div class="docker-empty-state">Checking Docker containers...</div>
+            </div>
+        </section>
+
         <!-- Top 10 Heavy Processes Panel -->
         <section class="telemetry-card process-card">
             <div class="card-header-row" style="margin-bottom: 8px;">
@@ -1325,6 +1600,21 @@ function renderDashboardPage() {
             </button>
 
             <p class="modal-tip">Paste into the terminal of your remote VM. It will automatically run persistently via systemd and report live metrics every 5 seconds.</p>
+        </div>
+    </div>
+
+    <!-- Container Details Modal -->
+    <div class="modal-overlay" id="containerModalOverlay" aria-hidden="true">
+        <div class="modal-card container-modal-card" role="dialog" aria-labelledby="containerModalTitle">
+            <div class="modal-header">
+                <div style="min-width: 0; padding-right: 12px;">
+                    <h2 class="modal-title" id="containerModalTitle">Container</h2>
+                    <p class="modal-subtitle" id="containerModalSubtitle">--</p>
+                    <div class="container-modal-badges" id="containerModalBadges"></div>
+                </div>
+                <button class="modal-close-btn" id="btnCloseContainerModal" type="button" aria-label="Close container details">&times;</button>
+            </div>
+            <div id="containerModalBody"></div>
         </div>
     </div>
 
@@ -1507,6 +1797,293 @@ function renderDashboardPage() {
             }
         }
 
+        // Docker Containers State & Modal Renderer
+        let currentContainers = { status: 'unavailable', error: '', items: [] };
+        let currentDevStack = [];
+        let activeContainerId = null;
+
+        function escapeHtml(val) {
+            return String(val == null ? '' : val)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function safeHttpUrl(url) {
+            if (!url || typeof url !== 'string') return '';
+            const trimmed = url.trim();
+            return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+        }
+
+        function formatTimestamp(iso) {
+            if (!iso) return 'Unknown';
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return String(iso);
+            return d.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function formatRelativeTime(iso) {
+            if (!iso) return '';
+            const ms = Date.now() - new Date(iso).getTime();
+            if (Number.isNaN(ms)) return '';
+            if (ms < 0) return 'just now';
+            const sec = Math.floor(ms / 1000);
+            if (sec < 60) return sec + 's ago';
+            const min = Math.floor(sec / 60);
+            if (min < 60) return min + 'm ago';
+            const hr = Math.floor(min / 60);
+            if (hr < 24) return hr + 'h ago';
+            const days = Math.floor(hr / 24);
+            return days + 'd ago';
+        }
+
+        function getStateBadgeMeta(state) {
+            const s = (state || 'unknown').toLowerCase();
+            if (s === 'running') return { cls: 'devstack-badge-active', dot: 'dot-active', label: 'Running' };
+            if (s === 'restarting' || s === 'created' || s === 'paused') return { cls: 'devstack-badge-inactive', dot: 'dot-inactive', label: s.charAt(0).toUpperCase() + s.slice(1) };
+            if (s === 'dead' || s === 'exited' || s === 'removing') return { cls: 'devstack-badge-failed', dot: 'dot-failed', label: s.charAt(0).toUpperCase() + s.slice(1) };
+            return { cls: 'devstack-badge-none', dot: 'dot-none', label: s };
+        }
+
+        function getHealthBadgeMeta(health, state) {
+            const h = (health || 'none').toLowerCase();
+            if (h === 'healthy') return { cls: 'devstack-badge-active', dot: 'dot-active', label: 'Healthy' };
+            if (h === 'unhealthy') return { cls: 'devstack-badge-failed', dot: 'dot-failed', label: 'Unhealthy' };
+            if (h === 'starting') return { cls: 'devstack-badge-info', dot: 'dot-info', label: 'Health: Starting' };
+            if ((state || '').toLowerCase() === 'running') return { cls: 'devstack-badge-none', dot: 'dot-none', label: 'No Healthcheck' };
+            return { cls: 'devstack-badge-none', dot: 'dot-none', label: 'Health: N/A' };
+        }
+
+        function formatCommitSource(src) {
+            if (src === 'oci-label') return 'OCI Image Label';
+            if (src === 'image-tag') return 'Image Tag';
+            if (src === 'compose-git') return 'Compose Host Git';
+            return 'Not Tagged';
+        }
+
+        function buildCommitUrl(repoUrl, commitFull) {
+            const safeRepo = safeHttpUrl(repoUrl);
+            if (!safeRepo || !commitFull) return '';
+            const cleanRepo = safeRepo.replace(/\.git$/i, '').replace(/\/+$/, '');
+            if (cleanRepo.includes('github.com') || cleanRepo.includes('gitlab.com')) {
+                return cleanRepo + '/commit/' + encodeURIComponent(commitFull);
+            }
+            return cleanRepo;
+        }
+
+        function renderDockerContainers(containersData, devStack) {
+            const grid = document.getElementById('dockerGrid');
+            const summaryPill = document.getElementById('dockerSummaryPill');
+            if (!grid) return;
+
+            const data = (containersData && typeof containersData === 'object')
+                ? containersData
+                : { status: 'unavailable', error: '', items: [] };
+            currentContainers = data;
+            currentDevStack = Array.isArray(devStack) ? devStack : [];
+
+            const items = Array.isArray(data.items) ? data.items : [];
+            const dockerTool = currentDevStack.find(d => d.key === 'docker');
+
+            if (data.status === 'not_installed' || (!items.length && dockerTool && dockerTool.status === 'not_installed')) {
+                if (summaryPill) summaryPill.innerText = 'Not Installed';
+                grid.innerHTML = '<div class="docker-empty-state">Docker is not installed on this node. Once installed, containers will appear here automatically.</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            if (data.status === 'inactive' || (!items.length && dockerTool && dockerTool.status === 'inactive')) {
+                if (summaryPill) summaryPill.innerText = 'Daemon Stopped';
+                grid.innerHTML = '<div class="docker-empty-state">Docker is installed, but the Docker daemon is not running.</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            if (data.status === 'permission_denied') {
+                if (summaryPill) summaryPill.innerText = 'Permission Denied';
+                grid.innerHTML = '<div class="docker-empty-state warn">Docker is active, but the service user cannot read <code>/var/run/docker.sock</code>.<br>Run <code>sudo usermod -aG docker ubuntu</code> and restart <code>ociadmin</code> via PM2.</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            if (data.status === 'unavailable') {
+                if (summaryPill) summaryPill.innerText = 'Not Reported';
+                grid.innerHTML = '<div class="docker-empty-state">Container telemetry is not reported by this node yet. Re-run the latest <code>install-agent.sh</code> on remote nodes with Docker installed.</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            if (data.status === 'error') {
+                if (summaryPill) summaryPill.innerText = 'Probe Error';
+                grid.innerHTML = '<div class="docker-empty-state warn">' + escapeHtml(data.error || 'Unable to inspect Docker containers') + '</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            if (items.length === 0) {
+                if (summaryPill) summaryPill.innerText = '0 Containers';
+                grid.innerHTML = '<div class="docker-empty-state">Docker is running, and there are currently 0 containers on this node.</div>';
+                refreshOpenContainerModal();
+                return;
+            }
+
+            const runningCount = items.filter(c => c.state === 'running').length;
+            const healthyCount = items.filter(c => c.health === 'healthy').length;
+            const unhealthyCount = items.filter(c => c.health === 'unhealthy').length;
+
+            if (summaryPill) {
+                let summaryText = runningCount + ' / ' + items.length + ' Running';
+                if (unhealthyCount > 0) summaryText += ' • ' + unhealthyCount + ' Unhealthy';
+                else if (healthyCount > 0) summaryText += ' • ' + healthyCount + ' Healthy';
+                summaryPill.innerText = summaryText;
+            }
+
+            grid.innerHTML = items.map(c => {
+                const stateMeta = getStateBadgeMeta(c.state);
+                const healthMeta = getHealthBadgeMeta(c.health, c.state);
+                const rebuildRel = c.rebuiltAt ? formatRelativeTime(c.rebuiltAt) : '';
+                const rebuildText = rebuildRel ? ('Rebuilt ' + rebuildRel) : (c.statusText || 'Unknown build time');
+                const commitText = c.commit ? escapeHtml(c.commit) : 'No Commit';
+                const commitCls = c.commit ? 'container-commit-chip' : 'container-commit-chip muted';
+
+                return '<button type="button" class="container-item" data-container-id="' + escapeHtml(c.id) + '">' +
+                    '<div class="container-item-top">' +
+                        '<div class="container-title-group">' +
+                            '<span class="container-name">' + escapeHtml(c.name) + '</span>' +
+                            '<span class="container-image" title="' + escapeHtml(c.image) + '">' + escapeHtml(c.image || 'unknown image') + '</span>' +
+                        '</div>' +
+                        '<div class="devstack-icon-wrapper" title="Inspect container details">' +
+                            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="container-badges">' +
+                        '<span class="devstack-badge ' + stateMeta.cls + '"><span class="badge-dot ' + stateMeta.dot + '"></span><span>' + escapeHtml(stateMeta.label) + '</span></span>' +
+                        '<span class="devstack-badge ' + healthMeta.cls + '"><span class="badge-dot ' + healthMeta.dot + '"></span><span>' + escapeHtml(healthMeta.label) + '</span></span>' +
+                    '</div>' +
+                    '<div class="container-meta-footer">' +
+                        '<span class="container-rebuild-meta" title="' + escapeHtml(formatTimestamp(c.rebuiltAt)) + '">' + escapeHtml(rebuildText) + '</span>' +
+                        '<span class="' + commitCls + '">' + commitText + '</span>' +
+                    '</div>' +
+                '</button>';
+            }).join('');
+
+            refreshOpenContainerModal();
+        }
+
+        function renderContainerModalContent(containerId) {
+            const titleEl = document.getElementById('containerModalTitle');
+            const subEl = document.getElementById('containerModalSubtitle');
+            const badgesEl = document.getElementById('containerModalBadges');
+            const bodyEl = document.getElementById('containerModalBody');
+            if (!titleEl || !subEl || !badgesEl || !bodyEl) return;
+
+            const items = Array.isArray(currentContainers.items) ? currentContainers.items : [];
+            const c = items.find(item => item.id === containerId);
+            if (!c) {
+                badgesEl.innerHTML = '';
+                bodyEl.innerHTML = '<div class="docker-empty-state">Container is no longer present on this node.</div>';
+                return;
+            }
+
+            const stateMeta = getStateBadgeMeta(c.state);
+            const healthMeta = getHealthBadgeMeta(c.health, c.state);
+
+            titleEl.innerText = c.name;
+            subEl.innerText = (c.image || 'unknown image') + ' • #' + c.id;
+            badgesEl.innerHTML =
+                '<span class="devstack-badge ' + stateMeta.cls + '"><span class="badge-dot ' + stateMeta.dot + '"></span><span>' + escapeHtml(stateMeta.label) + '</span></span>' +
+                '<span class="devstack-badge ' + healthMeta.cls + '"><span class="badge-dot ' + healthMeta.dot + '"></span><span>' + escapeHtml(healthMeta.label) + '</span></span>' +
+                (c.composeProject ? '<span class="devstack-badge devstack-badge-none">Stack: ' + escapeHtml(c.composeProject + (c.composeService ? '/' + c.composeService : '')) + '</span>' : '');
+
+            const rebuiltRel = formatRelativeTime(c.rebuiltAt);
+            const startedRel = formatRelativeTime(c.startedAt);
+            const commitUrl = buildCommitUrl(c.repoUrl, c.commitFull);
+
+            const commitValueHtml = c.commit
+                ? (commitUrl
+                    ? '<a class="commit-link" href="' + escapeHtml(commitUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(c.commitFull || c.commit) + '</a>'
+                    : escapeHtml(c.commitFull || c.commit))
+                : 'Not recorded';
+
+            const commitMetaParts = [
+                'Source: ' + formatCommitSource(c.commitSource),
+                c.commitBranch ? 'Branch: ' + c.commitBranch : ''
+            ].filter(Boolean);
+
+            const healthExtra = c.healthFailingStreak > 0
+                ? 'Failing streak: ' + c.healthFailingStreak + ' • Restarts: ' + (c.restartCount || 0)
+                : 'Restarts: ' + (c.restartCount || 0);
+
+            bodyEl.innerHTML =
+                '<div class="detail-grid">' +
+                    '<div class="detail-box">' +
+                        '<div class="detail-label">Health Check</div>' +
+                        '<div class="detail-value">' + escapeHtml(healthMeta.label) + '</div>' +
+                        '<div class="detail-sub">' + escapeHtml(healthExtra) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-box">' +
+                        '<div class="detail-label">Runtime Status</div>' +
+                        '<div class="detail-value">' + escapeHtml(c.statusText || stateMeta.label) + '</div>' +
+                        '<div class="detail-sub">Started: ' + escapeHtml(c.startedAt ? (formatTimestamp(c.startedAt) + (startedRel ? ' (' + startedRel + ')' : '')) : 'Not started') + '</div>' +
+                    '</div>' +
+                    '<div class="detail-box">' +
+                        '<div class="detail-label">Last Rebuild Time</div>' +
+                        '<div class="detail-value">' + escapeHtml(c.rebuiltAt ? formatTimestamp(c.rebuiltAt) : 'Unknown') + '</div>' +
+                        '<div class="detail-sub">' + escapeHtml(rebuiltRel ? ('Image built ' + rebuiltRel) : 'Image build timestamp unavailable') + '</div>' +
+                    '</div>' +
+                    '<div class="detail-box">' +
+                        '<div class="detail-label">Exposed Ports</div>' +
+                        '<div class="detail-value">' + escapeHtml(c.ports || 'None exposed') + '</div>' +
+                        '<div class="detail-sub">Created: ' + escapeHtml(c.createdAt ? formatTimestamp(c.createdAt) : 'Unknown') + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="detail-box detail-box-full">' +
+                    '<div class="detail-label">Git Commit</div>' +
+                    '<div class="detail-value" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">' + commitValueHtml + '</div>' +
+                    (c.commitMessage ? '<div class="detail-sub" style="color: #e4e4e7;">' + escapeHtml(c.commitMessage) + '</div>' : '') +
+                    '<div class="detail-sub">' + escapeHtml(commitMetaParts.join(' • ')) + '</div>' +
+                '</div>' +
+                (c.healthLog
+                    ? '<div class="detail-box">' +
+                        '<div class="detail-label">Latest Healthcheck Output</div>' +
+                        '<div class="health-log-box">' + escapeHtml(c.healthLog) + '</div>' +
+                      '</div>'
+                    : '');
+        }
+
+        function openContainerModal(containerId) {
+            const overlay = document.getElementById('containerModalOverlay');
+            if (!overlay) return;
+            activeContainerId = containerId;
+            renderContainerModalContent(containerId);
+            overlay.classList.add('open');
+            overlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeContainerModal() {
+            const overlay = document.getElementById('containerModalOverlay');
+            if (!overlay) return;
+            activeContainerId = null;
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+
+        function refreshOpenContainerModal() {
+            const overlay = document.getElementById('containerModalOverlay');
+            if (activeContainerId && overlay && overlay.classList.contains('open')) {
+                renderContainerModalContent(activeContainerId);
+            }
+        }
+
         const btnSortCpu = document.getElementById('btnSortCpu');
         const btnSortMem = document.getElementById('btnSortMem');
         if (btnSortCpu && btnSortMem) {
@@ -1548,6 +2125,7 @@ function renderDashboardPage() {
                     btn.innerHTML = '<span class="' + dotClass + '"></span><span>' + n.name + '</span>';
                     btn.addEventListener('click', () => {
                         activeNodeId = n.id;
+                        closeContainerModal();
                         document.querySelectorAll('.node-pill').forEach(p => p.classList.remove('active'));
                         btn.classList.add('active');
                         fetchActiveStats();
@@ -1709,7 +2287,14 @@ function renderDashboardPage() {
                 }
                 renderDevStackGrid(stats.devStack);
 
-                // 7. Top 10 Heavy Processes
+                // 7. Docker Containers Monitor
+                const dockerSub = document.getElementById('dockerNodeSubtitle');
+                if (dockerSub) {
+                    dockerSub.innerText = 'Node: ' + (nodeInfo.name || activeNodeId);
+                }
+                renderDockerContainers(stats.containers, stats.devStack);
+
+                // 8. Top 10 Heavy Processes
                 const procSub = document.getElementById('procNodeSubtitle');
                 if (procSub) {
                     procSub.innerText = 'Node: ' + (nodeInfo.name || activeNodeId);
@@ -1757,6 +2342,36 @@ function renderDashboardPage() {
 
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+        });
+
+        // Container Grid & Details Modal Events
+        const dockerGridEl = document.getElementById('dockerGrid');
+        const containerModalOverlay = document.getElementById('containerModalOverlay');
+        const btnCloseContainerModal = document.getElementById('btnCloseContainerModal');
+
+        if (dockerGridEl) {
+            dockerGridEl.addEventListener('click', (e) => {
+                const card = e.target.closest('.container-item');
+                if (!card || !card.dataset.containerId) return;
+                openContainerModal(card.dataset.containerId);
+            });
+        }
+
+        if (btnCloseContainerModal) {
+            btnCloseContainerModal.addEventListener('click', closeContainerModal);
+        }
+
+        if (containerModalOverlay) {
+            containerModalOverlay.addEventListener('click', (e) => {
+                if (e.target === containerModalOverlay) closeContainerModal();
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modalOverlay.classList.remove('open');
+                closeContainerModal();
+            }
         });
 
         nodeNameInput.addEventListener('input', updateInstallCommand);
