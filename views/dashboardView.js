@@ -1814,7 +1814,8 @@ function renderDashboardPage() {
         function safeHttpUrl(url) {
             if (!url || typeof url !== 'string') return '';
             const trimmed = url.trim();
-            return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+            const lower = trimmed.toLowerCase();
+            return (lower.startsWith('https://') || lower.startsWith('http://')) ? trimmed : '';
         }
 
         function formatTimestamp(iso) {
@@ -1873,7 +1874,7 @@ function renderDashboardPage() {
         function buildCommitUrl(repoUrl, commitFull) {
             const safeRepo = safeHttpUrl(repoUrl);
             if (!safeRepo || !commitFull) return '';
-            const cleanRepo = safeRepo.replace(/\.git$/i, '').replace(/\/+$/, '');
+            const cleanRepo = safeRepo.replace(/[.]git$/i, '').replace(/[/]+$/, '');
             if (cleanRepo.includes('github.com') || cleanRepo.includes('gitlab.com')) {
                 return cleanRepo + '/commit/' + encodeURIComponent(commitFull);
             }
